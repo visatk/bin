@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "visatkus",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-04-28",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "shop",
+      "database_id": "b0fe1a91-4ee0-4391-a105-3f29b41d0a60"
+    }
+  ]
+}
