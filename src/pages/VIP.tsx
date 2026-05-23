@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 
 export default function VIP() {
-  // Pulling 'user' to verify existing VIP status
   const { refreshUser, user } = useAuth();
   
   const handleUpgrade = async () => {
@@ -13,69 +12,80 @@ export default function VIP() {
       const data = await res.json();
       
       if (res.ok) {
-        toast.success('Successfully upgraded to Lifetime VIP!');
+        toast.success('Clearance elevated to Lifetime VIP.');
         await refreshUser();
       } else {
-        toast.error(data.error || 'Upgrade failed');
+        toast.error(data.error || 'Clearance elevation failed');
       }
     } catch (err) {
-      toast.error('Network error occurred');
+      toast.error('Network integrity error');
     }
   };
 
   return (
-    <div className="flex flex-col p-4 md:p-6 pb-24 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col p-4 md:p-8 pb-24 animate-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto w-full">
       
-      <div className="text-center mb-10 mt-6 relative">
-        <div className="inline-flex items-center justify-center p-4 bg-amber-500/10 rounded-full mb-4 shadow-[0_0_40px_rgba(245,158,11,0.2)]">
-          <Crown size={48} className="text-amber-400 drop-shadow-lg" />
+      <header className="text-center mb-12 mt-6 md:mt-10 relative">
+        <div className="inline-flex items-center justify-center p-5 bg-amber-500/10 border border-amber-500/20 rounded-3xl mb-6 shadow-[0_0_60px_rgba(245,158,11,0.15)]">
+          <Crown size={56} className="text-amber-400 drop-shadow-xl" aria-hidden="true" />
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-          Unlock <span className="bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">Premium Access</span>
+        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+          Establish <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-200 bg-clip-text text-transparent">Elite Clearance</span>
         </h1>
-        <p className="text-slate-400 mt-3 max-w-md mx-auto">
-          Get exclusive access to untouched, highest-quality bins before they hit the public market.
+        <p className="text-slate-400 mt-4 max-w-lg mx-auto text-sm md:text-base font-medium leading-relaxed">
+          Procure exclusive access to raw, uncirculated digital assets prior to public network release.
         </p>
-      </div>
+      </header>
 
-      <div className="max-w-md mx-auto w-full">
-        <div className="relative bg-gradient-to-b from-[#2a1d0d] to-[#1e160a] border border-amber-500/30 rounded-2xl p-6 flex flex-col shadow-[0_0_30px_rgba(245,158,11,0.1)]">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs font-black px-4 py-1 rounded-full flex items-center gap-1 shadow-lg">
-            <Gem size={12} /> LIFETIME DEAL
+      <main className="max-w-md mx-auto w-full">
+        <section 
+          className="relative bg-[#0d0a06] border border-amber-500/30 rounded-3xl p-8 flex flex-col shadow-[0_20px_50px_-15px_rgba(245,158,11,0.2)] overflow-hidden"
+          aria-labelledby="vip-tier-name"
+        >
+          {/* Decorative background glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-amber-500/10 blur-[60px] pointer-events-none" aria-hidden="true" />
+          
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[10px] font-black tracking-widest uppercase px-5 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg border border-yellow-200/50">
+            <Gem size={12} aria-hidden="true" /> PERMANENT CLEARANCE
           </div>
           
-          <h2 className="text-2xl font-bold text-amber-400 mb-2 mt-2 text-center">Elite Master</h2>
-          <div className="flex items-baseline justify-center gap-2 mb-8">
-            <span className="text-5xl font-black text-white">100</span>
-            <span className="text-sm text-amber-500/70 font-bold uppercase tracking-wider">Credits / Lifetime</span>
+          <h2 id="vip-tier-name" className="text-3xl font-black text-amber-400 mb-2 mt-4 text-center tracking-tight">Elite Master</h2>
+          <div className="flex items-baseline justify-center gap-2 mb-10" aria-label="Cost is 100 Points for a Lifetime duration">
+            <span className="text-6xl font-black text-white drop-shadow-md">100</span>
+            <span className="text-sm text-amber-500/80 font-bold uppercase tracking-widest" aria-hidden="true">PTS / LIFETIME</span>
           </div>
           
-          <ul className="flex flex-col gap-4 mb-8 flex-1">
-            <FeatureItem text="Unlimited Lifetime VIP Access" textClass="text-amber-100" iconClass="text-amber-400" />
-            <FeatureItem text="Access to VIP-Only Bins" textClass="text-amber-100" iconClass="text-amber-400" />
-            <FeatureItem text="15% Discount on all store items" textClass="text-amber-100" iconClass="text-amber-400" />
-            <FeatureItem text="Direct Telegram access to Admins" textClass="text-amber-100" iconClass="text-amber-400" />
-            <FeatureItem text="Auto-buy script API access" textClass="text-amber-100" iconClass="text-amber-400" />
+          <ul className="flex flex-col gap-5 mb-10 flex-1 relative z-10" aria-label="VIP Features">
+            <FeatureItem text="Unrestricted Lifetime Network Access" />
+            <FeatureItem text="Priority Authorization to VIP-Only Assets" />
+            <FeatureItem text="15% Procurement Discount across all categories" />
+            <FeatureItem text="Direct Secure-Channel access to Node Admins" />
+            <FeatureItem text="Automated Procurement Script API Access" />
           </ul>
           
           <Button 
             onClick={handleUpgrade} 
             disabled={user?.isVip}
-            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-lg h-14 shadow-[0_5px_15px_rgba(245,158,11,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={user?.isVip}
+            className={`w-full font-black text-lg h-14 rounded-xl transition-all shadow-[0_5px_20px_rgba(245,158,11,0.3)] active:scale-95 ${
+              user?.isVip 
+                ? 'bg-slate-900 border border-amber-500/20 text-amber-500/50 opacity-100 shadow-none cursor-not-allowed'
+                : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black'
+            }`}
           >
-            {user?.isVip ? 'Lifetime Unlocked' : 'Go Elite Now'}
+            {user?.isVip ? 'Clearance Established' : 'Initiate Protocol'}
           </Button>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
 
-function FeatureItem({ text, textClass = "text-slate-300", iconClass = "text-blue-400" }: { text: string, textClass?: string, iconClass?: string }) {
+function FeatureItem({ text }: { text: string }) {
   return (
-    <li className="flex items-start gap-3">
-      <CheckCircle2 size={20} className={`shrink-0 mt-0.5 ${iconClass}`} />
-      <span className={`font-medium text-sm ${textClass}`}>{text}</span>
+    <li className="flex items-start gap-3.5">
+      <CheckCircle2 size={20} className="shrink-0 mt-0.5 text-amber-400" aria-hidden="true" />
+      <span className="font-semibold text-sm text-amber-100/90 leading-snug">{text}</span>
     </li>
   );
 }
