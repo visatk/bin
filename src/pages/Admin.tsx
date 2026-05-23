@@ -3,14 +3,18 @@ import { toast } from 'sonner';
 import { Check, X, PlusCircle, Megaphone, Trash2, LayoutDashboard, Radio, Package, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 
+type TabState = 'assets' | 'topups' | 'broadcasts';
+
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'assets' | 'topups' | 'broadcasts'>('assets');
+  const [activeTab, setActiveTab] = useState<TabState>('assets');
   
   const [bins, setBins] = useState<any[]>([]);
   const [topups, setTopups] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Bin Form State
   const [editingBinId, setEditingBinId] = useState<number | null>(null);
@@ -26,6 +30,7 @@ export default function Admin() {
   const [newsType, setNewsType] = useState('update');
 
   const fetchAdminData = async () => {
+    setIsLoading(true);
     try {
       const [binsRes, topupsRes, newsRes] = await Promise.all([
         fetch('/api/admin/bins'),
@@ -36,8 +41,10 @@ export default function Admin() {
       if (topupsRes.ok) setTopups(await topupsRes.json());
       if (newsRes.ok) setAnnouncements(await newsRes.json());
     } catch (e) {
-      console.error('Failed to sync admin state', e);
+      console.error('Edge state synchronization failed:', e);
       toast.error('Network synchronization failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,24 +81,23 @@ export default function Admin() {
     });
 
     if (res.ok) {
-      toast.success(editingBinId ? 'Asset updated successfully' : 'Asset deployed to edge network');
+      toast.success(editingBinId ? 'Asset ledger updated' : 'Asset deployed to network');
       handleCancelEdit();
       await fetchAdminData();
     } else {
-      toast.error('Failed to commit asset changes');
+      toast.error('Edge commit failed');
     }
   };
 
   const handleDeleteBin = async (id: number) => {
-    if (!confirm('Warning: Deleting an asset may fail if it is tied to existing purchase records. Continue?')) return;
+    if (!window.confirm('CRITICAL ACTION: Purging an asset may orphan purchase records. Proceed?')) return;
     
     const res = await fetch(`/api/admin/bins/${id}`, { method: 'DELETE' });
     if (res.ok) {
-      toast.success('Asset purged');
+      toast.success('Asset permanently purged from edge');
       setBins(bins.filter(b => b.id !== id));
     } else {
-      const data = await res.json();
-      toast.error(data.error || 'Failed to delete asset');
+      toast.error('Purge failed');
     }
   };
 
@@ -104,8 +110,10 @@ export default function Admin() {
     });
 
     if (res.ok) {
-      toast.success(`Transaction ${action}d successfully`);
+      toast.success(`Transaction ${action}d securely`);
       setTopups(topups.filter(t => t.id !== id));
+    } else {
+      toast.error('Failed to resolve transaction');
     }
   };
 
@@ -121,7 +129,7 @@ export default function Admin() {
     });
 
     if (res.ok) {
-      toast.success('Broadcast active across network');
+      toast.success('Network broadcast deployed');
       setNewsTitle('');
       await fetchAdminData();
     }
@@ -130,7 +138,7 @@ export default function Admin() {
   const handleDeleteAnnouncement = async (id: number) => {
     const res = await fetch(`/api/admin/announcements/${id}`, { method: 'DELETE' });
     if (res.ok) {
-      toast.success('Broadcast revoked');
+      toast.success('Broadcast revoked from edge');
       setAnnouncements(announcements.filter(a => a.id !== id));
     }
   };
@@ -144,263 +152,304 @@ export default function Admin() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
-      
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-slate-800/80">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-500/10 rounded-xl">
-            <LayoutDashboard className="text-blue-500" size={24} />
+    <div className="flex flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-500 max-w-7xl mx-auto w-full">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-800/80">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl shadow-inner">
+            <LayoutDashboard className="text-blue-500" size={28} aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">Command Center</h1>
-            <p className="text-sm text-slate-400 font-medium">Platform Operations & Moderation</p>
+            <h1 className="text-3xl font-black tracking-tight text-white">Command Center</h1>
+            <p className="text-sm text-slate-400 font-medium">Platform Logistics & Network Moderation</p>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex gap-2 bg-[#13151c] p-1.5 rounded-xl border border-slate-800 w-full md:w-auto">
-          <button 
-            onClick={() => setActiveTab('assets')}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'assets' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'}`}
-          >
-            <Package size={16} /> Assets
-          </button>
-          <button 
-            onClick={() => setActiveTab('topups')}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all relative ${activeTab === 'topups' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'}`}
-          >
-            <Radio size={16} /> Topups
-            {topups.length > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full animate-ping" />}
-            {topups.length > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />}
-          </button>
-          <button 
-            onClick={() => setActiveTab('broadcasts')}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'broadcasts' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'}`}
-          >
-            <Megaphone size={16} /> Broadcasts
-          </button>
-        </div>
+        <nav role="tablist" aria-label="Admin Sections" className="flex gap-2 bg-[#11141d] p-1.5 rounded-xl border border-slate-800 w-full md:w-auto overflow-x-auto custom-scrollbar">
+          {(['assets', 'topups', 'broadcasts'] as TabState[]).map((tab) => (
+            <button 
+              key={tab}
+              role="tab"
+              aria-selected={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all capitalize whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                activeTab === tab 
+                  ? 'bg-slate-800 text-white shadow-md' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              {tab === 'assets' && <Package size={16} aria-hidden="true" />}
+              {tab === 'topups' && (
+                <div className="relative flex items-center">
+                  <Radio size={16} aria-hidden="true" />
+                  {topups.length > 0 && <span className="absolute -top-1 -right-2 w-2 h-2 bg-orange-500 rounded-full animate-pulse" aria-hidden="true" />}
+                </div>
+              )}
+              {tab === 'broadcasts' && <Megaphone size={16} aria-hidden="true" />}
+              {tab}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      {/* --- ASSETS TAB --- */}
-      {activeTab === 'assets' && (
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-          <div className="xl:col-span-5">
-            <section className={`bg-gradient-to-b ${editingBinId ? 'from-indigo-900/40 to-[#171a23] border-indigo-500/50' : 'from-[#1e2330] to-[#171a23] border-slate-800'} border rounded-2xl p-6 shadow-xl transition-all`}>
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2 text-white font-bold">
-                  {editingBinId ? <Edit2 size={20} className="text-indigo-400" /> : <PlusCircle size={20} className="text-blue-500" />}
-                  <h2>{editingBinId ? 'Modify Digital Asset' : 'Deploy Digital Asset'}</h2>
-                </div>
-                {editingBinId && (
-                  <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="text-slate-400 hover:text-white h-7 px-2">Cancel</Button>
-                )}
-              </div>
-              
-              <form onSubmit={handlePostBin} className="flex flex-col gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Asset Title</label>
-                  <Input placeholder="e.g. YouTube Premium 1M" value={title} onChange={(e) => setTitle(e.target.value)} required className="bg-black/40 border-slate-700 focus-visible:ring-blue-500" />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Category</label>
-                    <Input placeholder="e.g. Media" value={category} onChange={(e) => setCategory(e.target.value)} required className="bg-black/40 border-slate-700" />
+      <main role="tabpanel" aria-label={`${activeTab} panel`} className="mt-2">
+        
+        {/* --- ASSETS TAB --- */}
+        {activeTab === 'assets' && (
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+            <div className="xl:col-span-4">
+              <section className={`bg-gradient-to-b ${editingBinId ? 'from-indigo-900/30 to-[#11141d] border-indigo-500/40' : 'from-[#171a23] to-[#11141d] border-slate-800'} border rounded-3xl p-6 shadow-xl transition-all sticky top-24`}>
+                <header className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2 text-white font-bold text-lg">
+                    {editingBinId ? <Edit2 size={20} className="text-indigo-400" aria-hidden="true" /> : <PlusCircle size={20} className="text-blue-500" aria-hidden="true" />}
+                    <h2>{editingBinId ? 'Modify Asset' : 'Deploy Asset'}</h2>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cost (CR)</label>
-                    <Input type="number" min="0" placeholder="e.g. 50" value={price} onChange={(e) => setPrice(e.target.value)} required className="bg-black/40 border-slate-700 font-mono" />
-                  </div>
-                </div>
+                  {editingBinId && (
+                    <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="text-slate-400 hover:text-white h-8 px-3 rounded-lg">Cancel</Button>
+                  )}
+                </header>
                 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Badge / Icon</label>
-                  <Input placeholder="e.g. 📺 or 🇺🇸" value={flag} onChange={(e) => setFlag(e.target.value)} className="bg-black/40 border-slate-700" />
-                </div>
+                <form onSubmit={handlePostBin} className="flex flex-col gap-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="asset-title" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Asset Title</Label>
+                    <Input id="asset-title" placeholder="e.g. Premium Access Key" value={title} onChange={(e) => setTitle(e.target.value)} required className="bg-[#0a0c10] border-slate-700 h-11 rounded-xl focus-visible:ring-blue-500" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="asset-category" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Category</Label>
+                      <Input id="asset-category" placeholder="e.g. Keys" value={category} onChange={(e) => setCategory(e.target.value)} required className="bg-[#0a0c10] border-slate-700 h-11 rounded-xl focus-visible:ring-blue-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="asset-price" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cost (PTS)</Label>
+                      <Input id="asset-price" type="number" min="0" placeholder="50" value={price} onChange={(e) => setPrice(e.target.value)} required className="bg-[#0a0c10] border-slate-700 h-11 rounded-xl font-mono focus-visible:ring-blue-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="asset-badge" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Visual Badge (Emoji)</Label>
+                    <Input id="asset-badge" placeholder="e.g. 🔑" value={flag} onChange={(e) => setFlag(e.target.value)} className="bg-[#0a0c10] border-slate-700 h-11 rounded-xl focus-visible:ring-blue-500" />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Encrypted Payload</label>
-                  <textarea placeholder="Credentials or Data to reveal on purchase..." value={assetData} onChange={(e) => setAssetData(e.target.value)} required className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm h-24 text-emerald-400 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none custom-scrollbar" />
+                  <div className="space-y-2">
+                    <Label htmlFor="asset-payload" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Encrypted Payload (Post-Purchase)</Label>
+                    <textarea id="asset-payload" placeholder="Data to reveal to user..." value={assetData} onChange={(e) => setAssetData(e.target.value)} required className="w-full bg-[#0a0c10] border border-slate-700 rounded-xl p-3 text-sm h-32 text-emerald-400 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none custom-scrollbar" />
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 p-4 border border-slate-800 rounded-xl bg-[#0a0c10]/50 mt-2">
+                    <input id="asset-vip" type="checkbox" checked={isVipExclusive} onChange={(e) => setIsVipExclusive(e.target.checked)} className="w-4 h-4 rounded border-slate-700 bg-black accent-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 cursor-pointer" />
+                    <Label htmlFor="asset-vip" className="font-bold text-amber-500/90 cursor-pointer">Restrict to VIP Clearance Only</Label>
+                  </div>
+                  
+                  <Button type="submit" className={`w-full h-12 text-md font-bold rounded-xl mt-2 active:scale-95 transition-transform ${editingBinId ? 'bg-indigo-600 hover:bg-indigo-500 shadow-[0_5px_20px_rgba(79,70,229,0.3)]' : 'bg-blue-600 hover:bg-blue-500 shadow-[0_5px_20px_rgba(37,99,235,0.3)]'}`}>
+                    {editingBinId ? 'Commit Modifications' : 'Initialize Deployment'}
+                  </Button>
+                </form>
+              </section>
+            </div>
+
+            <div className="xl:col-span-8">
+              <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 shadow-xl h-full flex flex-col min-h-[600px]">
+                <header className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800/50">
+                  <h2 className="text-white font-bold flex items-center gap-2 text-xl">
+                    <Package size={22} className="text-slate-400" aria-hidden="true" /> Distributed Ledger
+                  </h2>
+                  <Badge variant="outline" className="bg-slate-900 text-slate-300 border-slate-700 py-1 px-3 text-sm">
+                    {bins.length} Objects
+                  </Badge>
+                </header>
+
+                <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                  {isLoading ? (
+                     <div className="flex justify-center items-center h-full text-blue-500">
+                       <div className="w-8 h-8 border-4 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"/>
+                     </div>
+                  ) : bins.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                      <Package size={48} className="mb-4 opacity-20" aria-hidden="true" />
+                      <p className="font-medium">Ledger is empty. Awaiting deployment.</p>
+                    </div>
+                  ) : (
+                    bins.map((bin) => (
+                      <article key={bin.id} className="bg-[#171a23] border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 hover:border-blue-500/40 transition-colors focus-within:ring-2 focus-within:ring-blue-500">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl shrink-0" aria-hidden="true">
+                            {bin.badge || '📦'}
+                          </div>
+                          <div>
+                            <h3 className="text-slate-100 font-bold flex items-center gap-2 text-base">
+                              {bin.title}
+                              {bin.isVipExclusive && <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-1.5 py-0 text-[10px]">VIP</Badge>}
+                            </h3>
+                            <div className="flex items-center gap-3 mt-2 text-xs font-semibold">
+                              <span className="text-slate-300 bg-slate-800 px-2 py-0.5 rounded-md">{bin.category}</span>
+                              <span className="text-blue-400">{bin.priceCredits} PTS</span>
+                              <span className="text-slate-500">Vol: {bin.soldCount || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <Button variant="outline" size="sm" onClick={() => handleEditInit(bin)} className="flex-1 sm:flex-none bg-slate-900 border-slate-700 hover:bg-indigo-500/20 hover:text-indigo-400 h-9 font-semibold">
+                            <Edit2 size={14} className="sm:mr-2" aria-hidden="true" /> <span className="hidden sm:inline">Modify</span>
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleDeleteBin(bin.id)} className="flex-1 sm:flex-none bg-slate-900 border-slate-700 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30 h-9 font-semibold">
+                            <Trash2 size={14} className="sm:mr-2" aria-hidden="true" /> <span className="hidden sm:inline">Purge</span>
+                          </Button>
+                        </div>
+                      </article>
+                    ))
+                  )}
                 </div>
-                
-                <label className="flex items-center gap-3 text-slate-300 text-sm p-3 border border-slate-800 rounded-xl bg-black/20 hover:bg-black/40 transition-colors cursor-pointer mt-2">
-                  <input type="checkbox" checked={isVipExclusive} onChange={(e) => setIsVipExclusive(e.target.checked)} className="w-4 h-4 rounded border-slate-700 bg-black accent-amber-500" />
-                  <span className="font-medium text-amber-500/90">Restrict to VIP clearance</span>
-                </label>
-                
-                <Button type="submit" className={`w-full h-12 text-md font-bold shadow-lg mt-2 ${editingBinId ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'}`}>
-                  {editingBinId ? 'Commit Modifications' : 'Initialize Deployment'}
+              </section>
+            </div>
+          </div>
+        )}
+
+        {/* --- TOPUPS TAB --- */}
+        {activeTab === 'topups' && (
+          <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl max-w-4xl mx-auto w-full min-h-[600px] flex flex-col">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-800/50">
+              <div className="flex items-center gap-3 text-white font-bold text-xl">
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                  <Radio size={24} className="text-orange-500 animate-pulse" aria-hidden="true" />
+                </div>
+                <h2>Transaction Verification Queue</h2>
+              </div>
+              <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20 px-4 py-1.5 text-sm font-black tracking-widest">
+                {topups.length} PENDING
+              </Badge>
+            </header>
+
+            <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+              {isLoading ? (
+                 <div className="flex justify-center py-20 text-blue-500"><div className="w-8 h-8 border-4 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"/></div>
+              ) : topups.length === 0 ? (
+                <div className="text-center py-24 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl bg-[#0a0c10]/50 h-full">
+                  <Check size={48} className="text-slate-700 mb-4" aria-hidden="true" />
+                  <p className="text-slate-400 font-medium text-lg">Queue is currently optimal.</p>
+                  <p className="text-slate-500 text-sm mt-1">No pending transactions require authorization.</p>
+                </div>
+              ) : (
+                topups.map((topup) => (
+                  <article key={topup.id} className="bg-[#171a23] border border-slate-800 rounded-2xl p-6 flex flex-col gap-5 hover:border-slate-600 transition-colors">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                      <div className="flex flex-col gap-2">
+                        <p className="text-sm text-slate-400 font-medium flex items-center gap-2">
+                          Initiator: <span className="text-white font-bold bg-slate-900 px-3 py-1 rounded-md border border-slate-800">@{topup.username}</span>
+                        </p>
+                        <div className="flex flex-col gap-1 mt-2">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Blockchain TX Hash:</span>
+                          <code className="text-sm text-blue-400 bg-[#0a0c10] border border-blue-500/20 px-3 py-2 rounded-lg break-all font-mono shadow-inner">
+                            {topup.txHash}
+                          </code>
+                        </div>
+                      </div>
+                      <div className="text-right whitespace-nowrap bg-[#0a0c10] px-5 py-3 rounded-xl border border-slate-800 w-full sm:w-auto flex sm:flex-col justify-between sm:justify-start items-center sm:items-end">
+                        <p className="text-3xl font-black text-emerald-400">+{topup.creditsToAdd}</p>
+                        <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">{topup.currency}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4 pt-4 border-t border-slate-800/80">
+                      <Button onClick={() => handleResolveTopup(topup.id, 'approve')} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_5px_15px_rgba(16,185,129,0.2)] h-12 font-bold text-base active:scale-95 transition-transform">
+                        <Check size={20} className="mr-2" aria-hidden="true" /> Authorize
+                    </Button>
+                      <Button onClick={() => handleResolveTopup(topup.id, 'reject')} variant="outline" className="flex-1 bg-slate-900 hover:bg-rose-500/10 text-rose-400 border-slate-700 hover:border-rose-500/30 h-12 font-bold text-base active:scale-95 transition-transform">
+                        <X size={20} className="mr-2" aria-hidden="true" /> Reject
+                      </Button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* --- BROADCASTS TAB --- */}
+        {activeTab === 'broadcasts' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto w-full">
+            <section className="bg-gradient-to-b from-[#11141d] to-[#0a0c10] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl h-fit">
+              <header className="flex items-center gap-3 mb-6 text-white font-bold text-xl border-b border-slate-800/50 pb-4">
+                <div className="p-2 bg-purple-500/10 rounded-lg">
+                  <Megaphone size={24} className="text-purple-400" aria-hidden="true" />
+                </div>
+                <h2>Network Broadcast</h2>
+              </header>
+              
+              <form onSubmit={handlePostAnnouncement} className="flex flex-col gap-5">
+                <div className="space-y-2">
+                  <Label htmlFor="news-type" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Transmission Priority</Label>
+                  <select 
+                    id="news-type"
+                    value={newsType} 
+                    onChange={(e) => setNewsType(e.target.value)} 
+                    className="w-full bg-[#171a23] border border-slate-700 text-sm text-slate-200 rounded-xl h-12 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none font-medium cursor-pointer"
+                  >
+                    <option value="update">Platform Update (Standard)</option>
+                    <option value="alert">Security Alert (High)</option>
+                    <option value="event">Special Event (Promo)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="news-title" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Payload Message</Label>
+                  <textarea 
+                    id="news-title"
+                    placeholder="Enter broadcast transmission..." 
+                    value={newsTitle} 
+                    onChange={(e) => setNewsTitle(e.target.value)} 
+                    required 
+                    className="w-full bg-[#171a23] border border-slate-700 rounded-xl p-4 text-sm h-32 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none custom-scrollbar" 
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold h-14 text-lg shadow-[0_5px_20px_rgba(147,51,234,0.3)] mt-2 active:scale-95 transition-transform">
+                  Transmit to Fleet
                 </Button>
               </form>
             </section>
-          </div>
 
-          <div className="xl:col-span-7">
-            <section className="bg-[#171a23] border border-slate-800 rounded-2xl p-6 shadow-lg h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-white font-bold flex items-center gap-2">
-                  <Package size={20} className="text-slate-400" /> Asset Ledger
+            <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl min-h-[500px] flex flex-col">
+              <header className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800/50">
+                <h2 className="text-white font-bold flex items-center gap-3 text-xl">
+                  <Radio size={22} className="text-slate-400" aria-hidden="true" /> Active Transmissions
                 </h2>
-                <Badge variant="outline" className="bg-slate-800/50 text-slate-400 border-slate-700">
-                  {bins.length} Total
+                <Badge variant="outline" className="bg-slate-900 text-slate-400 border-slate-700">
+                  {announcements.length} Live
                 </Badge>
-              </div>
-
-              <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-2 custom-scrollbar max-h-[700px]">
-                {bins.length === 0 ? (
-                  <div className="text-center py-12 text-sm text-slate-600 font-medium border-2 border-dashed border-slate-800 rounded-xl">No assets deployed.</div>
+              </header>
+              
+              <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                 {isLoading ? (
+                   <div className="flex justify-center py-20 text-purple-500"><div className="w-8 h-8 border-4 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"/></div>
+                 ) : announcements.length === 0 ? (
+                  <div className="text-center py-16 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl bg-[#0a0c10]/50 h-full">
+                    <p className="text-slate-500 font-medium">No active broadcasts in the network.</p>
+                  </div>
                 ) : (
-                  bins.map((bin) => (
-                    <div key={bin.id} className="bg-[#1e2330] border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group hover:border-blue-500/50 transition-all">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-black/40 border border-slate-800 flex items-center justify-center text-xl shrink-0">
-                          {bin.badge || '📦'}
-                        </div>
-                        <div>
-                          <h4 className="text-slate-200 font-bold flex items-center gap-2 flex-wrap leading-tight">
-                            {bin.title}
-                            {bin.isVipExclusive && <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-1.5 py-0 text-[9px]">VIP</Badge>}
-                          </h4>
-                          <div className="flex items-center gap-3 mt-1.5 text-xs font-medium">
-                            <span className="text-slate-400 bg-slate-800/50 px-2 py-0.5 rounded-md">{bin.category}</span>
-                            <span className="text-blue-400">{bin.priceCredits} CR</span>
-                            <span className="text-slate-500 hidden sm:inline-block">Sold: {bin.soldCount || 0}</span>
-                          </div>
-                        </div>
+                  announcements.map((news) => (
+                    <article key={news.id} className="flex justify-between items-start p-5 rounded-2xl bg-[#171a23] border border-slate-800 group hover:border-slate-600 transition-colors gap-4">
+                      <div className="flex flex-col gap-3">
+                        <Badge variant="outline" className={`${getBadgeColor(news.type)} uppercase text-[10px] font-black tracking-widest w-fit py-0.5 px-2`}>
+                          {news.type}
+                        </Badge>
+                        <span className="text-sm font-medium text-slate-100 leading-relaxed">{news.title}</span>
                       </div>
-                      
-                      <div className="flex gap-2 w-full sm:w-auto">
-                        <Button variant="outline" size="sm" onClick={() => handleEditInit(bin)} className="flex-1 sm:flex-none bg-slate-800/50 border-slate-700 hover:bg-indigo-500/20 hover:text-indigo-400 hover:border-indigo-500/30">
-                          <Edit2 size={14} className="sm:mr-2" /> <span className="hidden sm:inline">Edit</span>
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDeleteBin(bin.id)} className="flex-1 sm:flex-none bg-slate-800/50 border-slate-700 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30">
-                          <Trash2 size={14} className="sm:mr-2" /> <span className="hidden sm:inline">Purge</span>
-                        </Button>
-                      </div>
-                    </div>
+                      <button 
+                        onClick={() => handleDeleteAnnouncement(news.id)} 
+                        className="text-slate-500 hover:text-rose-400 transition-colors p-2.5 bg-[#0a0c10] border border-slate-800 hover:border-rose-500/30 hover:bg-rose-500/10 rounded-xl shrink-0"
+                        title="Revoke Broadcast"
+                        aria-label={`Revoke broadcast: ${news.title}`}
+                      >
+                        <Trash2 size={18} aria-hidden="true" />
+                      </button>
+                    </article>
                   ))
                 )}
               </div>
             </section>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* --- TOPUPS TAB --- */}
-      {activeTab === 'topups' && (
-        <section className="bg-[#171a23] border border-slate-800 rounded-2xl p-6 shadow-lg max-w-4xl mx-auto w-full">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2 text-white font-bold">
-              <Radio size={20} className="text-orange-500 animate-pulse" />
-              <h2>Transaction Verification Queue</h2>
-            </div>
-            <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20 px-3 py-1 font-bold">
-              {topups.length} PENDING
-            </Badge>
-          </div>
-
-          <div className="flex flex-col gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            {topups.length === 0 ? (
-              <div className="text-center py-16 flex flex-col items-center border-2 border-dashed border-slate-800 rounded-xl">
-                <Check size={48} className="text-slate-700 mb-4" />
-                <p className="text-slate-400 font-medium">Queue is currently optimal. No pending transactions.</p>
-              </div>
-            ) : (
-              topups.map((topup) => (
-                <div key={topup.id} className="bg-[#1e2330] border border-slate-800 rounded-xl p-5 flex flex-col gap-4 hover:border-slate-700 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                      <p className="text-sm text-slate-300 font-medium mb-1">
-                        User: <span className="text-white font-bold bg-slate-800 px-2 py-0.5 rounded">@{topup.username}</span>
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs font-bold text-slate-500 uppercase">TX Hash:</span>
-                        <code className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded-md break-all">
-                          {topup.txHash}
-                        </code>
-                      </div>
-                    </div>
-                    <div className="text-right whitespace-nowrap ml-4 bg-black/40 px-4 py-2 rounded-lg border border-slate-800">
-                      <p className="text-2xl font-black text-emerald-400">+{topup.creditsToAdd}</p>
-                      <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">{topup.currency}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 pt-2 border-t border-slate-800/80">
-                    <Button onClick={() => handleResolveTopup(topup.id, 'approve')} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 h-10 font-bold">
-                      <Check size={18} className="mr-2" /> Authorize Deposit
-                    </Button>
-                    <Button onClick={() => handleResolveTopup(topup.id, 'reject')} variant="outline" className="flex-1 bg-transparent hover:bg-rose-500/10 text-rose-400 border-rose-500/30 hover:border-rose-500/50 h-10 font-bold">
-                      <X size={18} className="mr-2" /> Reject Fraudulent
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* --- BROADCASTS TAB --- */}
-      {activeTab === 'broadcasts' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto w-full">
-          <section className="bg-gradient-to-b from-[#1e2330] to-[#171a23] border border-slate-800 rounded-2xl p-6 shadow-xl h-fit">
-            <div className="flex items-center gap-2 mb-5 text-white font-bold">
-              <Megaphone size={20} className="text-purple-500" />
-              <h2>Network Broadcast System</h2>
-            </div>
-            
-            <form onSubmit={handlePostAnnouncement} className="flex flex-col gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Transmission Type</label>
-                <select value={newsType} onChange={(e) => setNewsType(e.target.value)} className="w-full bg-black/40 border border-slate-700 text-sm text-slate-200 rounded-xl h-10 px-3 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none">
-                  <option value="update">Platform Update</option>
-                  <option value="alert">Security Alert</option>
-                  <option value="event">Special Event</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Payload Message</label>
-                <textarea placeholder="Enter broadcast transmission..." value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} required className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm h-24 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
-              </div>
-              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold h-12 shadow-lg shadow-purple-500/20 mt-2">
-                Transmit to Fleet
-              </Button>
-            </form>
-          </section>
-
-          <section className="bg-[#171a23] border border-slate-800 rounded-2xl p-6 shadow-lg">
-            <h2 className="text-white font-bold mb-5 flex items-center gap-2">
-              <Radio size={20} className="text-slate-400" /> Active Transmissions
-            </h2>
-            <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-               {announcements.length === 0 ? (
-                <div className="text-center py-10 text-sm text-slate-500 font-medium border-2 border-dashed border-slate-800 rounded-xl">No active broadcasts.</div>
-              ) : (
-                announcements.map((news) => (
-                  <div key={news.id} className="flex justify-between items-start p-4 rounded-xl bg-[#1e2330] border border-slate-800 group hover:border-slate-700 transition-colors gap-4">
-                    <div className="flex flex-col gap-2">
-                      <Badge variant="outline" className={`${getBadgeColor(news.type)} uppercase text-[10px] font-black tracking-wider w-fit`}>
-                        {news.type}
-                      </Badge>
-                      <span className="text-sm font-medium text-slate-200 leading-snug">{news.title}</span>
-                    </div>
-                    <button 
-                      onClick={() => handleDeleteAnnouncement(news.id)} 
-                      className="text-slate-500 hover:text-rose-400 transition-colors p-2 bg-black/20 hover:bg-rose-500/10 rounded-lg shrink-0"
-                      title="Revoke Broadcast"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-        </div>
-      )}
-
+      </main>
     </div>
   );
 }
