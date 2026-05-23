@@ -46,7 +46,7 @@ export default function VIP() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-amber-500/10 blur-[60px] pointer-events-none" aria-hidden="true" />
           
           <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[10px] font-black tracking-widest uppercase px-5 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg border border-yellow-200/50">
-            <Gem size={12} aria-hidden="true" /> PERMANENT CLEARANCE
+            <Gem size={12} aria-hidden="true" /> Benefits
           </div>
           
           <h2 id="vip-tier-name" className="text-3xl font-black text-amber-400 mb-2 mt-4 text-center tracking-tight">Elite Master</h2>
