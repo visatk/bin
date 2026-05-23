@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Wallet, Bell, ShieldCheck, Activity, Eye, EyeOff, LockKeyhole, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton'; // Requires shadcn skeleton component
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Dashboard() {
@@ -55,16 +55,18 @@ export default function Dashboard() {
   if (authLoading || !user) return <DashboardSkeleton />;
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-700 max-w-6xl mx-auto w-full">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-700 max-w-7xl mx-auto w-full">
       <header className="flex flex-col gap-1 focus-visible:outline-none" tabIndex={-1}>
         <h1 className="text-3xl font-black text-white tracking-tight">Dashboard</h1>
         <p className="text-slate-300 text-sm">Welcome back, <span className="text-white font-semibold">@{user?.username}</span>.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* LEFT COLUMN */}
+        
+        {/* LEFT COLUMN: Financials & Vault */}
         <div className="lg:col-span-7 flex flex-col gap-8">
-          {/* Balance Card - Contrast & Hierarchy Optimized */}
+          
+          {/* Balance Card */}
           <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-900/50 via-[#131b2f] to-[#0d1017] border border-blue-500/30 p-8 shadow-[0_15px_40px_-15px_rgba(37,99,235,0.25)]">
             <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none" aria-hidden="true">
               <Wallet size={120} className="text-blue-400 transform rotate-12" />
@@ -164,21 +166,68 @@ export default function Dashboard() {
             </div>
           </section>
         </div>
+
+        {/* RIGHT COLUMN: Network Activity Feed (Restored) */}
+        <div className="lg:col-span-5 flex flex-col gap-8">
+          <section className="bg-[#11141d] border border-slate-800/80 rounded-3xl p-6 shadow-xl h-full flex flex-col">
+            <header className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800/50">
+              <div className="p-2 bg-purple-500/10 rounded-lg" aria-hidden="true">
+                <Activity size={20} className="text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Network Activity</h3>
+                <p className="text-sm text-slate-400">Live system updates</p>
+              </div>
+            </header>
+
+            <div className="flex flex-col gap-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-800 before:to-transparent">
+              {dataLoading ? (
+                 <ActivitySkeletons />
+              ) : latestNews.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-8">No recent transmissions.</p>
+              ) : (
+                latestNews.map((news) => (
+                  <article key={news.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[#11141d] bg-slate-900 text-slate-500 group-hover:bg-purple-600 group-hover:text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 transition-colors z-10" aria-hidden="true">
+                      <Bell size={14} />
+                    </div>
+                    
+                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-2xl bg-[#0a0c10] border border-slate-800/80 hover:border-purple-500/40 transition-colors shadow-sm focus-within:ring-2 focus-within:ring-purple-500 outline-none">
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className={`w-fit text-[9px] uppercase font-black tracking-wider ${news.type === 'alert' ? 'bg-red-500/10 text-red-400 border-red-500/20' : news.type === 'event' ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                          {news.type || 'Update'}
+                        </Badge>
+                        <span className="text-sm font-bold text-slate-100 mt-1">{news.title}</span>
+                        <time className="text-[10px] text-slate-500 font-mono mt-2" dateTime={news.createdAt}>
+                          {new Date(news.createdAt).toLocaleDateString()}
+                        </time>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+
       </div>
     </div>
   );
 }
 
-// Cognitive Load Reduction Components
+// --------------------------------------------------------
+// Cognitive Load Reduction Components (Skeletons)
+// --------------------------------------------------------
+
 const DashboardSkeleton = () => (
-  <div className="flex flex-col gap-8 max-w-6xl mx-auto w-full animate-pulse">
+  <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full animate-pulse">
     <div>
       <Skeleton className="h-10 w-48 mb-2 bg-slate-800" />
       <Skeleton className="h-4 w-64 bg-slate-800" />
     </div>
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       <Skeleton className="lg:col-span-7 h-64 rounded-3xl bg-slate-800" />
-      <Skeleton className="lg:col-span-5 h-96 rounded-3xl bg-slate-800" />
+      <Skeleton className="lg:col-span-5 h-[500px] rounded-3xl bg-slate-800" />
     </div>
   </div>
 );
@@ -187,6 +236,14 @@ const VaultSkeletons = () => (
   <div className="flex flex-col gap-4">
     {[1, 2].map(i => (
       <Skeleton key={i} className="h-32 w-full rounded-2xl bg-slate-800/50" />
+    ))}
+  </div>
+);
+
+const ActivitySkeletons = () => (
+  <div className="flex flex-col gap-6 w-full">
+    {[1, 2, 3].map(i => (
+      <Skeleton key={i} className="h-24 w-full rounded-2xl bg-slate-800/50" />
     ))}
   </div>
 );
