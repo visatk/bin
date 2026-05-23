@@ -73,7 +73,7 @@ export default function VIP() {
                 : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black'
             }`}
           >
-            {user?.isVip ? 'Clearance Established' : 'Initiate Protocol'}
+            {user?.isVip ? 'Success ✅' : 'Active VIP'}
           </Button>
         </section>
       </main>
