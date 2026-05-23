@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Copy, Users, Gift, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 export default function Earn() {
   const [stats, setStats] = useState({ referred: 0, earned: 0 });
   const [referralCode, setReferralCode] = useState('...');
+  const [loading, setLoading] = useState(true);
+  
   const referralLink = `https://visatk.us/auth?ref=${referralCode}`;
   
   useEffect(() => {
@@ -14,60 +17,79 @@ export default function Earn() {
       .then(d => {
         if (d.referralCode) setReferralCode(d.referralCode);
         setStats({ referred: d.totalReferrals || 0, earned: d.pointsEarned || 0 });
-      });
+      })
+      .catch(() => toast.error("Failed to sync reward metrics"))
+      .finally(() => setLoading(false));
   }, []);
 
   const copyLink = () => {
     navigator.clipboard.writeText(referralLink);
-    toast.success('Referral link copied!');
+    toast.success('Affiliate link recorded to memory buffer.');
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 animate-in slide-in-from-left-4 duration-500">
+    <div className="flex flex-col gap-6 p-4 md:p-8 animate-in slide-in-from-left-4 duration-500 max-w-3xl mx-auto w-full">
       
-      <div className="text-center mt-4 mb-2">
-        <div className="inline-flex p-3 bg-purple-500/10 rounded-full mb-3">
-          <Gift size={32} className="text-purple-400" />
+      <header className="text-center mt-6 md:mt-10 mb-4">
+        <div className="inline-flex p-4 bg-purple-500/10 border border-purple-500/20 rounded-3xl mb-5 shadow-[0_0_40px_rgba(168,85,247,0.15)]">
+          <Gift size={36} className="text-purple-400" aria-hidden="true" />
         </div>
-        <h1 className="text-2xl font-bold text-white">Refer & Earn Points</h1>
-        <p className="text-slate-400 text-sm mt-2 max-w-sm mx-auto">
-          Invite friends to BINMarket. When they make their first deposit, you instantly receive <strong className="text-purple-400">10%</strong> of their deposit amount in Points!
+        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">Expand the Network</h1>
+        <p className="text-slate-400 text-sm md:text-base mt-3 max-w-md mx-auto font-medium leading-relaxed">
+          Recruit users to the platform. Upon their initial deposit protocol, you instantly acquire <strong className="text-purple-400 font-black">10%</strong> of their provision value in Points.
         </p>
-      </div>
+      </header>
 
-      {/* The Link */}
-      <section className="bg-[#1e2330] border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-bl-full blur-2xl pointer-events-none" />
+      {/* The Link Configuration */}
+      <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-bl-full blur-[50px] pointer-events-none" aria-hidden="true" />
         
-        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Your Unique Invite Link</label>
-        <div className="flex items-center gap-2 bg-[#13151c] p-2 pl-4 rounded-xl border border-slate-700">
-          <span className="flex-1 text-sm font-mono text-purple-300 truncate">
-            {referralLink}
-          </span>
-          <Button onClick={copyLink} className="bg-purple-600 hover:bg-purple-500 text-white rounded-lg">
-            <Copy size={16} className="mr-2" /> Copy
-          </Button>
+        <div className="relative z-10">
+          <Label htmlFor="referral-link" className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 block">Unique Access Key (URL)</Label>
+          <div className="flex items-center gap-3 bg-[#0a0c10] p-2 pl-5 rounded-2xl border border-slate-700 shadow-inner focus-within:border-purple-500/50 transition-colors">
+            <span id="referral-link" className={`flex-1 text-sm md:text-base font-mono truncate transition-opacity ${loading ? 'opacity-50 blur-[2px]' : 'text-purple-300'}`}>
+              {referralLink}
+            </span>
+            <Button 
+              onClick={copyLink} 
+              disabled={loading}
+              aria-label="Copy referral link"
+              className="bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl h-12 px-6 shadow-[0_5px_15px_rgba(147,51,234,0.2)] active:scale-95 transition-transform"
+            >
+              <Copy size={18} className="md:mr-2" aria-hidden="true" /> <span className="hidden md:inline">Copy</span>
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 mt-2">
-        <div className="bg-[#1e2330] border border-slate-800 rounded-2xl p-5 flex flex-col items-center text-center">
-          <Users size={24} className="text-blue-400 mb-2" />
-          <span className="text-3xl font-black text-white">{stats.referred}</span>
-          <span className="text-xs font-semibold text-slate-500 uppercase mt-1">Total Referrals</span>
-        </div>
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-2">
+        <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-8 flex flex-col items-center text-center shadow-lg hover:border-blue-500/30 transition-colors">
+          <div className="p-3 bg-blue-500/10 rounded-2xl mb-4">
+            <Users size={28} className="text-blue-400" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col gap-1" aria-label={`Total network recruits: ${stats.referred}`}>
+            <span className="text-4xl font-black text-white tracking-tight">{stats.referred}</span>
+            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Network Recruits</span>
+          </div>
+        </section>
         
-        <div className="bg-[#1e2330] border border-slate-800 rounded-2xl p-5 flex flex-col items-center text-center">
-          <TrendingUp size={24} className="text-green-400 mb-2" />
-          <span className="text-3xl font-black text-white">{stats.earned}</span>
-          <span className="text-xs font-semibold text-slate-500 uppercase mt-1">Points Earned</span>
-        </div>
+        <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-8 flex flex-col items-center text-center shadow-lg hover:border-emerald-500/30 transition-colors">
+          <div className="p-3 bg-emerald-500/10 rounded-2xl mb-4">
+            <TrendingUp size={28} className="text-emerald-400" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col gap-1" aria-label={`Total provisions acquired: ${stats.earned}`}>
+            <span className="text-4xl font-black text-white tracking-tight">{stats.earned}</span>
+            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Provisions Acquired (PTS)</span>
+          </div>
+        </section>
       </div>
       
-      <div className="text-center mt-6">
-        <p className="text-xs text-slate-600">Referral points are credited automatically upon successful topup by the invitee.</p>
-      </div>
+      <footer className="text-center mt-8 px-4">
+        <p className="text-xs text-slate-600 font-medium">
+          Recruitment points are credited algorithmically upon successful verification of the invitee's deposit.
+        </p>
+      </footer>
     </div>
   );
 }
