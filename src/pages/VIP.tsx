@@ -30,10 +30,10 @@ export default function VIP() {
           <Crown size={56} className="text-amber-400 drop-shadow-xl" aria-hidden="true" />
         </div>
         <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-          Establish <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-200 bg-clip-text text-transparent">Elite Clearance</span>
+          Upgrade <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-200 bg-clip-text text-transparent">VIP</span>
         </h1>
         <p className="text-slate-400 mt-4 max-w-lg mx-auto text-sm md:text-base font-medium leading-relaxed">
-          Procure exclusive access to raw, uncirculated digital assets prior to public network release.
+          Access All VIP Benefit
         </p>
       </header>
 
@@ -56,10 +56,10 @@ export default function VIP() {
           </div>
           
           <ul className="flex flex-col gap-5 mb-10 flex-1 relative z-10" aria-label="VIP Features">
-            <FeatureItem text="Unrestricted Lifetime Network Access" />
+            <FeatureItem text="Unrestricted Lifetime Access All VIP Products" />
             <FeatureItem text="Priority Authorization to VIP-Only Assets" />
             <FeatureItem text="15% Procurement Discount across all categories" />
-            <FeatureItem text="Direct Secure-Channel access to Node Admins" />
+            <FeatureItem text="Direct Secure-Channel access to Admins" />
             <FeatureItem text="Automated Procurement Script API Access" />
           </ul>
           
