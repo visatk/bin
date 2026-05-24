@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { cache } from 'hono/cache';
 import type { Bindings, Variables } from './types';
+import { requireAuth } from './middleware/auth'; // Import your middleware
 import auth from './routes/auth';
 import shop from './routes/shop';
 import user from './routes/user';
@@ -28,6 +29,13 @@ app.get(
   })
 );
 
+// Apply requireAuth middleware to all core API routes (excluding /api/auth)
+app.use('/api/shop/*', requireAuth);
+app.use('/api/user/*', requireAuth);
+app.use('/api/vip/*', requireAuth);
+app.use('/api/topup/*', requireAuth);
+app.use('/api/admin/*', requireAuth);
+
 app.onError((err, c) => {
   console.error('API Error:', err);
   return c.json({ error: 'Internal Server Error' }, 500);
@@ -37,6 +45,7 @@ app.notFound((c) => {
   return c.json({ error: 'Endpoint Not Found' }, 404);
 });
 
+// Route Mounts
 app.route('/api/auth', auth);
 app.route('/api/shop', shop);
 app.route('/api/user', user);
