@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 
 // Performance Optimization: Route-Based Code Splitting
@@ -20,15 +20,27 @@ const PageLoader = () => (
   </div>
 );
 
+// New: Protected Route Wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return <PageLoader />;
+  if (!user) return <Navigate to="/auth" replace />;
+  
+  return <>{children}</>;
+};
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            {/* Public Route */}
             <Route path="/auth" element={<Auth />} />
             
-            <Route element={<Layout />}>
+            {/* Protected Routes Wrapper */}
+            <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/" element={<Shop />} />
               <Route path="/vip" element={<VIP />} />
               <Route path="/earn" element={<Earn />} />
