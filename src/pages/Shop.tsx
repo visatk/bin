@@ -106,10 +106,10 @@ export default function Shop() {
       <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-950/60 to-indigo-950/40 border border-blue-500/30 p-6 md:p-8 shadow-[0_15px_40px_-15px_rgba(37,99,235,0.2)]">
         <div className="relative z-10">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            Asset Market <ShieldCheck className="text-blue-400" size={28} aria-hidden="true" />
+            Visatk <ShieldCheck className="text-blue-400" size={28} aria-hidden="true" />
           </h1>
           <p className="text-slate-300 mt-2 max-w-md text-sm md:text-base font-medium">
-            High-grade, verified digital assets. Synchronized in real-time.
+            Bins, Methods, CC, Fullz, Proxy premium tools and more.
           </p>
         </div>
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px] pointer-events-none" />
