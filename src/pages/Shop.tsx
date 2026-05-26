@@ -101,7 +101,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 pb-24 animate-in fade-in duration-500 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-8 lg:p-10 xl:p-12 pb-24 lg:pb-32 animate-in fade-in duration-700 w-full max-w-7xl mx-auto">
       
       <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-950/60 to-indigo-950/40 border border-blue-500/30 p-6 md:p-8 shadow-[0_15px_40px_-15px_rgba(37,99,235,0.2)]">
         <div className="relative z-10">
@@ -116,7 +116,7 @@ export default function Shop() {
       </header>
 
       {/* Semantic Controls */}
-      <nav aria-label="Marketplace Filters" className="flex flex-col md:flex-row gap-4 items-center sticky top-0 z-40 bg-[#0a0c10]/95 backdrop-blur-xl py-4 rounded-b-xl border-b border-slate-800/80">
+      <nav aria-label="Marketplace Filters" className="flex flex-col md:flex-row gap-4 items-center sticky top-0 z-40 bg-[#0a0c10]/90 backdrop-blur-2xl py-4 md:py-5 rounded-b-2xl border-b border-slate-800/80 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]">
         <div className="relative w-full md:w-auto flex-1">
           <label htmlFor="search-assets" className="sr-only">Search assets</label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
@@ -172,7 +172,7 @@ export default function Shop() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredItems.map(item => (
-              <article key={item.id} className="group relative flex flex-col bg-[#11141d] border border-slate-800 hover:border-blue-500/50 rounded-2xl p-5 transition-all duration-300 shadow-md hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+              <article key={item.id} className="group relative flex flex-col bg-[#11141d] border border-slate-800/80 hover:border-blue-500/50 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(59,130,246,0.2)] hover:-translate-y-1.5 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
                 
                 {item.isVipExclusive && (
                   <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[10px] font-black px-3 py-1.5 rounded-bl-xl flex items-center gap-1.5 z-10 shadow-lg">
@@ -221,12 +221,12 @@ export default function Shop() {
                     onClick={() => handlePurchase(item)}
                     disabled={purchasingIds[item.id] || (item.isVipExclusive && !user?.isVip)}
                     aria-label={`Purchase ${item.title} for ${item.priceCredits} points`}
-                    className={`rounded-xl font-bold transition-all h-10 px-4 shadow-lg active:scale-95 ${
+                    className={`rounded-xl font-bold transition-all duration-300 h-10 px-4 shadow-lg hover:-translate-y-0.5 active:scale-95 ${
                       item.isVipExclusive && !user?.isVip 
-                        ? 'bg-slate-800 text-slate-500 border-slate-700 opacity-50 cursor-not-allowed'
+                        ? 'bg-slate-800 text-slate-500 border-slate-700 opacity-50 cursor-not-allowed hover:translate-y-0'
                         : item.isVipExclusive 
-                          ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black shadow-amber-500/20' 
-                          : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20'
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black shadow-amber-500/20 hover:shadow-amber-500/40' 
+                          : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20 hover:shadow-blue-500/40'
                     }`}
                   >
                     {purchasingIds[item.id] ? (

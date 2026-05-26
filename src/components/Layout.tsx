@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, Wallet, Crown, ShieldPlus, Coins, LogOut, Hexagon } from 'lucide-react';
+import { Home, ShoppingCart, Wallet, Crown, ShieldPlus, Coins, LogOut, Hexagon, Landmark } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 
@@ -8,15 +8,16 @@ export default function Layout() {
   const location = useLocation();
 
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/', icon: ShoppingCart, label: 'Shop' },
-    { path: '/topup', icon: Wallet, label: 'Topup' },
-    { path: '/vip', icon: Crown, label: 'VIP' },
-    { path: '/earn', icon: Coins, label: 'Earn' },
+    { path: '/dashboard', icon: Home, label: 'Home', prefetch: () => import('@/pages/Dashboard') },
+    { path: '/', icon: ShoppingCart, label: 'Shop', prefetch: () => import('@/pages/Shop') },
+    { path: '/topup', icon: Wallet, label: 'Topup', prefetch: () => import('@/pages/Topup') },
+    { path: '/vip', icon: Crown, label: 'VIP', prefetch: () => import('@/pages/VIP') },
+    { path: '/earn', icon: Coins, label: 'Earn', prefetch: () => import('@/pages/Earn') },
+    { path: '/withdraw', icon: Landmark, label: 'Withdraw', prefetch: () => import('@/pages/Withdraw') },
   ];
 
   if (user?.isAdmin) {
-    navItems.push({ path: '/admin', icon: ShieldPlus, label: 'Command Center' });
+    navItems.push({ path: '/admin', icon: ShieldPlus, label: 'Command Center', prefetch: () => import('@/pages/Admin') });
   }
 
   const DesktopNavLinks = () => (
@@ -28,7 +29,9 @@ export default function Layout() {
         return (
           <li key={item.path} className="w-full">
             <Link 
-              to={item.path} 
+              to={item.path}
+              onMouseEnter={() => item.prefetch && item.prefetch()}
+              onFocus={() => item.prefetch && item.prefetch()}
               className="block w-full outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-xl transition-all"
               aria-current={isActive ? 'page' : undefined}
             >
@@ -127,6 +130,8 @@ export default function Layout() {
               <li key={item.path} className="flex-1 h-full min-w-[64px]">
                 <Link 
                   to={item.path} 
+                  onMouseEnter={() => item.prefetch && item.prefetch()}
+                  onTouchStart={() => item.prefetch && item.prefetch()}
                   // WCAG 2.5.5: Minimum 44x44px target size enforced via full height/width block
                   className="flex flex-col items-center justify-center h-full w-full relative outline-none focus-visible:bg-white/5 rounded-lg transition-colors group"
                   aria-current={isActive ? 'page' : undefined}

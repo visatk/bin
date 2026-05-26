@@ -10,6 +10,7 @@ import user from './routes/user';
 import vip from './routes/vip';
 import topup from './routes/topup';
 import admin from './routes/admin';
+import withdraw from './routes/withdraw';
 
 const app = new Hono<{ Bindings: Bindings, Variables: Variables }>();
 
@@ -35,6 +36,7 @@ app.use('/api/user/*', requireAuth);
 app.use('/api/vip/*', requireAuth);
 app.use('/api/topup/*', requireAuth);
 app.use('/api/admin/*', requireAuth);
+app.use('/api/withdraw/*', requireAuth);
 
 app.onError((err, c) => {
   console.error('API Error:', err);
@@ -52,5 +54,6 @@ app.route('/api/user', user);
 app.route('/api/vip', vip);
 app.route('/api/topup', topup);
 app.route('/api/admin', admin);
+app.route('/api/withdraw', withdraw);
 
 export default app;

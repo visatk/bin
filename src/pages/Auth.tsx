@@ -58,7 +58,7 @@ export default function Auth() {
     <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center p-4 selection:bg-blue-500/30">
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none mix-blend-overlay"></div>
       
-      <main className="w-full max-w-sm bg-[#11141d]/90 backdrop-blur-xl rounded-3xl p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] border border-slate-800/60 z-10">
+      <main className="w-full max-w-sm bg-[#11141d]/80 backdrop-blur-2xl rounded-3xl p-8 md:p-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] border border-slate-800/60 z-10 transition-all">
         
         <header className="flex flex-col items-center gap-3 mb-8 text-center">
           <div className="h-14 w-14 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-900/40 border border-blue-400/30">
@@ -128,7 +128,7 @@ export default function Auth() {
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl mt-2 shadow-[0_5px_20px_rgba(37,99,235,0.25)] transition-all active:scale-95"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl mt-2 shadow-[0_5px_20px_rgba(37,99,235,0.25)] hover:shadow-[0_5px_30px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 transition-all duration-300 active:scale-95"
           >
             {isSubmitting ? (
                <span className="flex items-center gap-2">

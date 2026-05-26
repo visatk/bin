@@ -127,4 +127,48 @@ app.delete('/announcements/:id', async (c) => {
   return c.json({ success: true });
 });
 
+// --- WITHDRAWAL MANAGEMENT ---
+app.get('/withdrawals', async (c) => {
+  const db = c.get('db');
+  const pending = await db.select({
+    id: schema.withdrawals.id,
+    username: schema.users.username,
+    amountPts: schema.withdrawals.amountPts,
+    amountUsdt: schema.withdrawals.amountUsdt,
+    address: schema.withdrawals.address,
+    status: schema.withdrawals.status,
+    createdAt: schema.withdrawals.createdAt,
+  })
+  .from(schema.withdrawals)
+  .leftJoin(schema.users, eq(schema.withdrawals.userId, schema.users.id))
+  .where(eq(schema.withdrawals.status, 'pending'))
+  .orderBy(desc(schema.withdrawals.createdAt));
+  
+  return c.json(pending);
+});
+
+app.post('/withdrawals/:id/resolve', zValidator('json', z.object({ action: z.enum(['approve', 'reject']) })), async (c) => {
+  const id = Number(c.req.param('id'));
+  const { action } = c.req.valid('json');
+  const db = c.get('db');
+
+  const withdrawal = await db.select().from(schema.withdrawals).where(eq(schema.withdrawals.id, id)).get();
+  if (!withdrawal || withdrawal.status !== 'pending') return c.json({ error: 'Withdrawal not found or already processed' }, 404);
+
+  if (action === 'approve') {
+    await db.update(schema.withdrawals).set({ status: 'approved' }).where(eq(schema.withdrawals.id, id));
+  } else {
+    // Reject: refund PTS
+    const user = await db.select().from(schema.users).where(eq(schema.users.id, withdrawal.userId)).get();
+    if (user) {
+      await db.batch([
+        db.update(schema.withdrawals).set({ status: 'rejected' }).where(eq(schema.withdrawals.id, id)),
+        db.update(schema.users).set({ credits: user.credits + withdrawal.amountPts }).where(eq(schema.users.id, user.id))
+      ] as any);
+    }
+  }
+
+  return c.json({ success: true });
+});
+
 export default app;

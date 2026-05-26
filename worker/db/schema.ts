@@ -51,3 +51,13 @@ export const announcements = sqliteTable('announcements', {
   type: text('type').notNull().default('update'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+
+export const withdrawals = sqliteTable('withdrawals', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id),
+  amountPts: integer('amount_pts').notNull(),
+  amountUsdt: integer('amount_usdt').notNull(),
+  address: text('address').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});

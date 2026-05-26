@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Check, X, PlusCircle, Megaphone, Trash2, LayoutDashboard, Radio, Package, Edit2 } from 'lucide-react';
+import { Check, X, PlusCircle, Megaphone, Trash2, LayoutDashboard, Radio, Package, Edit2, Landmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 
-type TabState = 'assets' | 'topups' | 'broadcasts';
+type TabState = 'assets' | 'topups' | 'broadcasts' | 'withdrawals';
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState<TabState>('assets');
   
   const [bins, setBins] = useState<any[]>([]);
   const [topups, setTopups] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -32,14 +33,16 @@ export default function Admin() {
   const fetchAdminData = async () => {
     setIsLoading(true);
     try {
-      const [binsRes, topupsRes, newsRes] = await Promise.all([
+      const [binsRes, topupsRes, newsRes, withdrawRes] = await Promise.all([
         fetch('/api/admin/bins'),
         fetch('/api/admin/topups'),
-        fetch('/api/admin/announcements')
+        fetch('/api/admin/announcements'),
+        fetch('/api/admin/withdrawals')
       ]);
       if (binsRes.ok) setBins(await binsRes.json());
       if (topupsRes.ok) setTopups(await topupsRes.json());
       if (newsRes.ok) setAnnouncements(await newsRes.json());
+      if (withdrawRes.ok) setWithdrawals(await withdrawRes.json());
     } catch (e) {
       console.error('Edge state synchronization failed:', e);
       toast.error('Network synchronization failed');
@@ -117,6 +120,22 @@ export default function Admin() {
     }
   };
 
+  // --- WITHDRAWAL OPERATIONS ---
+  const handleResolveWithdrawal = async (id: number, action: 'approve' | 'reject') => {
+    const res = await fetch(`/api/admin/withdrawals/${id}/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    });
+
+    if (res.ok) {
+      toast.success(`Withdrawal ${action}d securely`);
+      setWithdrawals(withdrawals.filter(w => w.id !== id));
+    } else {
+      toast.error('Failed to resolve withdrawal');
+    }
+  };
+
   // --- ANNOUNCEMENT OPERATIONS ---
   const handlePostAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +184,7 @@ export default function Admin() {
         </div>
 
         <nav role="tablist" aria-label="Admin Sections" className="flex gap-2 bg-[#11141d] p-1.5 rounded-xl border border-slate-800 w-full md:w-auto overflow-x-auto custom-scrollbar">
-          {(['assets', 'topups', 'broadcasts'] as TabState[]).map((tab) => (
+          {(['assets', 'topups', 'withdrawals', 'broadcasts'] as TabState[]).map((tab) => (
             <button 
               key={tab}
               role="tab"
@@ -182,6 +201,12 @@ export default function Admin() {
                 <div className="relative flex items-center">
                   <Radio size={16} aria-hidden="true" />
                   {topups.length > 0 && <span className="absolute -top-1 -right-2 w-2 h-2 bg-orange-500 rounded-full animate-pulse" aria-hidden="true" />}
+                </div>
+              )}
+              {tab === 'withdrawals' && (
+                <div className="relative flex items-center">
+                  <Landmark size={16} aria-hidden="true" />
+                  {withdrawals.length > 0 && <span className="absolute -top-1 -right-2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" aria-hidden="true" />}
                 </div>
               )}
               {tab === 'broadcasts' && <Megaphone size={16} aria-hidden="true" />}
@@ -355,6 +380,66 @@ export default function Admin() {
                         <Check size={20} className="mr-2" aria-hidden="true" /> Authorize
                     </Button>
                       <Button onClick={() => handleResolveTopup(topup.id, 'reject')} variant="outline" className="flex-1 bg-slate-900 hover:bg-rose-500/10 text-rose-400 border-slate-700 hover:border-rose-500/30 h-12 font-bold text-base active:scale-95 transition-transform">
+                        <X size={20} className="mr-2" aria-hidden="true" /> Reject
+                      </Button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* --- WITHDRAWALS TAB --- */}
+        {activeTab === 'withdrawals' && (
+          <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl max-w-4xl mx-auto w-full min-h-[600px] flex flex-col">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-800/50">
+              <div className="flex items-center gap-3 text-white font-bold text-xl">
+                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                  <Landmark size={24} className="text-emerald-500 animate-pulse" aria-hidden="true" />
+                </div>
+                <h2>Withdrawal Verification Queue</h2>
+              </div>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-4 py-1.5 text-sm font-black tracking-widest">
+                {withdrawals.length} PENDING
+              </Badge>
+            </header>
+
+            <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+              {isLoading ? (
+                 <div className="flex justify-center py-20 text-emerald-500"><div className="w-8 h-8 border-4 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"/></div>
+              ) : withdrawals.length === 0 ? (
+                <div className="text-center py-24 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl bg-[#0a0c10]/50 h-full">
+                  <Check size={48} className="text-slate-700 mb-4" aria-hidden="true" />
+                  <p className="text-slate-400 font-medium text-lg">Withdrawal queue is clear.</p>
+                  <p className="text-slate-500 text-sm mt-1">No pending payouts require authorization.</p>
+                </div>
+              ) : (
+                withdrawals.map((withdrawal) => (
+                  <article key={withdrawal.id} className="bg-[#171a23] border border-slate-800 rounded-2xl p-6 flex flex-col gap-5 hover:border-slate-600 transition-colors">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                      <div className="flex flex-col gap-2">
+                        <p className="text-sm text-slate-400 font-medium flex items-center gap-2">
+                          Requester: <span className="text-white font-bold bg-slate-900 px-3 py-1 rounded-md border border-slate-800">@{withdrawal.username}</span>
+                        </p>
+                        <div className="flex flex-col gap-1 mt-2">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Destination Address (BEP20):</span>
+                          <code className="text-sm text-emerald-400 bg-[#0a0c10] border border-emerald-500/20 px-3 py-2 rounded-lg break-all font-mono shadow-inner">
+                            {withdrawal.address}
+                          </code>
+                        </div>
+                      </div>
+                      <div className="text-right whitespace-nowrap bg-[#0a0c10] px-5 py-3 rounded-xl border border-slate-800 w-full sm:w-auto flex sm:flex-col justify-between sm:justify-start items-center sm:items-end">
+                        <p className="text-3xl font-black text-emerald-400">${withdrawal.amountUsdt.toFixed(2)}</p>
+                        <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">{withdrawal.amountPts} PTS</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4 pt-4 border-t border-slate-800/80">
+                      <Button onClick={() => handleResolveWithdrawal(withdrawal.id, 'approve')} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_5px_15px_rgba(16,185,129,0.2)] h-12 font-bold text-base active:scale-95 transition-transform">
+                        <Check size={20} className="mr-2" aria-hidden="true" /> Authorize
+                      </Button>
+                      <Button onClick={() => handleResolveWithdrawal(withdrawal.id, 'reject')} variant="outline" className="flex-1 bg-slate-900 hover:bg-rose-500/10 text-rose-400 border-slate-700 hover:border-rose-500/30 h-12 font-bold text-base active:scale-95 transition-transform">
                         <X size={20} className="mr-2" aria-hidden="true" /> Reject
                       </Button>
                     </div>
