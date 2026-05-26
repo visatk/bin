@@ -8,11 +8,11 @@ export default function Layout() {
   const location = useLocation();
 
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Overview' },
-    { path: '/', icon: ShoppingCart, label: 'Marketplace' },
-    { path: '/topup', icon: Wallet, label: 'Add Funds' },
-    { path: '/vip', icon: Crown, label: 'VIP Clearance' },
-    { path: '/earn', icon: Coins, label: 'Earn Rewards' },
+    { path: '/dashboard', icon: Home, label: 'Home' },
+    { path: '/', icon: ShoppingCart, label: 'Shop' },
+    { path: '/topup', icon: Wallet, label: 'Topup' },
+    { path: '/vip', icon: Crown, label: 'VIP' },
+    { path: '/earn', icon: Coins, label: 'Earn' },
   ];
 
   if (user?.isAdmin) {
