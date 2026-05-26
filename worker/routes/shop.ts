@@ -43,7 +43,7 @@ app.post('/purchase/:id', requireAuth, async (c) => {
   const finalPrice = user.isVip ? Math.floor(item.priceCredits * 0.85) : item.priceCredits;
   
   if (user.credits < finalPrice) {
-    return c.json({ error: `Insufficient credits. You need ${finalPrice} CR.` }, 400);
+    return c.json({ error: `Insufficient credits. You need ${finalPrice} PTS.` }, 400);
   }
 
   try {
