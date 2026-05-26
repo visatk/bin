@@ -17,7 +17,7 @@ export default function Layout() {
   ];
 
   if (user?.isAdmin) {
-    navItems.push({ path: '/admin', icon: ShieldPlus, label: 'Command Center', prefetch: () => import('@/pages/Admin') });
+    navItems.push({ path: '/admin', icon: ShieldPlus, label: 'Admin Dashboard', prefetch: () => import('@/pages/Admin') });
   }
 
   const DesktopNavLinks = () => (
@@ -73,7 +73,7 @@ export default function Layout() {
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-white leading-none">BIN<span className="text-blue-500">SHOP</span></h1>
-            <p className="text-[10px] text-slate-400 font-mono tracking-widest uppercase mt-1">Secure Network</p>
+            <p className="text-[10px] text-slate-400 font-mono tracking-widest uppercase mt-1">Premium Marketplace</p>
           </div>
         </header>
 
@@ -86,13 +86,13 @@ export default function Layout() {
         <footer className="mt-auto pt-6 border-t border-slate-800/80 flex flex-col gap-3">
           <div className="px-4 py-3.5 rounded-xl bg-[#0a0c10] border border-slate-800 flex items-center justify-between shadow-inner">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Identity</span>
+              <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Account</span>
               <span className="text-sm font-bold text-slate-200 truncate max-w-[120px]" title={user?.username}>
                 @{user?.username}
               </span>
             </div>
             {user?.isVip && (
-              <div title="VIP Clearance Active" aria-label="VIP Clearance Active">
+              <div title="VIP Status Active" aria-label="VIP Status Active">
                 <Crown size={18} className="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
               </div>
             )}
@@ -101,10 +101,10 @@ export default function Layout() {
           <Button 
             variant="ghost" 
             onClick={logout} 
-            aria-label="Secure Disconnect"
+            aria-label="Log Out"
             className="w-full justify-start text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-11 border border-transparent hover:border-rose-500/20 font-bold transition-all"
           >
-            <LogOut size={18} className="mr-3" aria-hidden="true" /> Secure Disconnect
+            <LogOut size={18} className="mr-3" aria-hidden="true" /> Log Out
           </Button>
         </footer>
       </aside>

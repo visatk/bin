@@ -70,10 +70,10 @@ export default function Withdraw() {
   };
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-700 max-w-5xl mx-auto w-full">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300 max-w-5xl mx-auto w-full">
       <header className="flex flex-col gap-1 focus-visible:outline-none" tabIndex={-1}>
         <h1 className="text-3xl font-black text-white tracking-tight">Withdraw Funds</h1>
-        <p className="text-slate-300 text-sm">Convert your PTS balance to USDT (BEP20).</p>
+        <p className="text-slate-300 text-sm">Exchange your points for USDT directly to your wallet.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

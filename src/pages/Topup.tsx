@@ -76,7 +76,7 @@ export default function Topup() {
         toast.error(data.error || 'Transaction submission failed');
       }
     } catch (err) {
-      toast.error('Network integrity error. Please retry.');
+      toast.error('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +91,7 @@ export default function Topup() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-8 pb-24 animate-in fade-in duration-500 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col gap-6 p-4 md:p-8 pb-24 animate-in fade-in duration-300 max-w-7xl mx-auto w-full">
       
       <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-[#0a0c10] border border-slate-800/80 p-8 shadow-xl">
         <div className="relative z-10">
@@ -99,7 +99,7 @@ export default function Topup() {
             <div className="p-3 bg-blue-600/10 rounded-2xl border border-blue-500/20 shadow-inner">
               <Wallet className="text-blue-500" size={32} aria-hidden="true" />
             </div>
-            Procure Funds
+            Add Funds
           </h1>
           <p className="text-slate-400 mt-3 max-w-lg text-sm md:text-base font-medium leading-relaxed">
             Execute secure on-chain deposits. Transactions are verified automatically against the distributed ledger. <strong className="text-slate-200">1 USD = 1 PTS</strong>.
@@ -116,7 +116,7 @@ export default function Topup() {
         <div className="lg:col-span-5 flex flex-col gap-6">
           <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-lg">
             <h2 className="text-xl font-bold text-white flex items-center gap-3 mb-8">
-              <ArrowRight size={22} className="text-blue-500" aria-hidden="true" /> Deposit Protocol
+              <ArrowRight size={22} className="text-blue-500" aria-hidden="true" /> Deposit Instructions
             </h2>
             
             {/* Step 1 */}
@@ -143,7 +143,7 @@ export default function Topup() {
 
             {/* Step 2 */}
             <div className="mb-10 p-5 bg-[#0a0c10] rounded-2xl border border-slate-800 shadow-inner">
-              <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">2. Transmit {currency.split(' ')[0]} To Node</p>
+              <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">2. Send {currency.split(' ')[0]} to this address</p>
               <div className="flex items-center gap-3">
                 <code className="flex-1 bg-[#11141d] text-slate-200 text-sm md:text-base px-4 py-3 rounded-xl border border-slate-700 break-all font-mono selection:bg-blue-500/30">
                   {WALLETS[currency]}
@@ -206,7 +206,7 @@ export default function Topup() {
                 {isSubmitting ? (
                   <span className="flex items-center gap-2"><div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"/> Processing Chain...</span>
                 ) : (
-                  'Submit Payload'
+                  'Verify Payment'
                 )}
               </Button>
             </form>
@@ -215,10 +215,10 @@ export default function Topup() {
 
         {/* Ledger History */}
         <div className="lg:col-span-7">
-          <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 h-full shadow-lg flex flex-col min-h-[500px]">
+          <section aria-live="polite" className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 h-full shadow-lg flex flex-col min-h-[500px]">
             <header className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800/50">
               <h2 className="text-xl font-bold text-white flex items-center gap-3">
-                <History size={22} className="text-slate-400" aria-hidden="true" /> Provision History
+                <History size={22} className="text-slate-400" aria-hidden="true" /> Deposit History
               </h2>
               <Badge variant="outline" className="bg-slate-900 text-slate-400 border-slate-700 px-3 py-1">
                 {history.length} Records
@@ -234,9 +234,9 @@ export default function Topup() {
             ) : history.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-slate-800/80 rounded-3xl bg-[#0a0c10]/40">
                 <Wallet size={56} className="text-slate-700 mb-5 opacity-50" aria-hidden="true" />
-                <h3 className="text-xl font-bold text-slate-300">No provisions recorded</h3>
+                <h3 className="text-xl font-bold text-slate-300">No deposits recorded</h3>
                 <p className="text-slate-500 text-sm mt-2 max-w-[280px] font-medium leading-relaxed">
-                  Your secure deposit history will populate here post-submission.
+                  Your deposit history will appear here once submitted.
                 </p>
               </div>
             ) : (

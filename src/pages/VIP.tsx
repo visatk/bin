@@ -12,7 +12,7 @@ export default function VIP() {
       const data = await res.json();
       
       if (res.ok) {
-        toast.success('Clearance elevated to Lifetime VIP.');
+        toast.success('Successfully upgraded to VIP status.');
         await refreshUser();
       } else {
         toast.error(data.error || 'Clearance elevation failed');
@@ -23,7 +23,7 @@ export default function VIP() {
   };
 
   return (
-    <div className="flex flex-col p-4 md:p-8 pb-24 animate-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto w-full">
+    <div className="flex flex-col p-4 md:p-8 pb-24 animate-in slide-in-from-bottom-4 duration-300 max-w-4xl mx-auto w-full">
       
       <header className="text-center mb-12 mt-6 md:mt-10 relative">
         <div className="inline-flex items-center justify-center p-5 bg-amber-500/10 border border-amber-500/20 rounded-3xl mb-6 shadow-[0_0_60px_rgba(245,158,11,0.15)]">
@@ -57,10 +57,10 @@ export default function VIP() {
           
           <ul className="flex flex-col gap-5 mb-10 flex-1 relative z-10" aria-label="VIP Features">
             <FeatureItem text="Unrestricted Lifetime Access All VIP Products" />
-            <FeatureItem text="Priority Authorization to VIP-Only Assets" />
+            <FeatureItem text="Priority access to exclusive VIP assets" />
             <FeatureItem text="15% Procurement Discount across all categories" />
             <FeatureItem text="Direct Secure-Channel access to Admins" />
-            <FeatureItem text="Automated Procurement Script API Access" />
+            <FeatureItem text="Early access to new platform features" />
           </ul>
           
           <Button 
@@ -69,7 +69,7 @@ export default function VIP() {
             aria-disabled={user?.isVip}
             className={`w-full font-black text-lg h-14 rounded-xl transition-all shadow-[0_5px_20px_rgba(245,158,11,0.3)] active:scale-95 ${
               user?.isVip 
-                ? 'bg-slate-900 border border-amber-500/20 text-amber-500/50 opacity-100 shadow-none cursor-not-allowed'
+                ? 'bg-slate-900 border border-amber-500/30 text-amber-500/80 opacity-80 shadow-none cursor-not-allowed'
                 : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black'
             }`}
           >

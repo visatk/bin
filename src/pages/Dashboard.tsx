@@ -55,7 +55,7 @@ export default function Dashboard() {
   if (authLoading || !user) return <DashboardSkeleton />;
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-700 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300 max-w-7xl mx-auto w-full">
       <header className="flex flex-col gap-1 focus-visible:outline-none" tabIndex={-1}>
         <h1 className="text-3xl font-black text-white tracking-tight">Dashboard</h1>
         <p className="text-slate-300 text-sm">Welcome back, <span className="text-white font-semibold">@{user?.username}</span>.</p>
@@ -112,8 +112,8 @@ export default function Dashboard() {
                   <LockKeyhole size={20} className="text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Secure Vault</h3>
-                  <p className="text-sm text-slate-400">Your procured digital assets</p>
+                  <h3 className="text-lg font-bold text-white">Your Collection</h3>
+                  <p className="text-sm text-slate-400">Your purchased assets</p>
                 </div>
               </div>
               <Badge variant="outline" className="bg-black/50 text-slate-300 border-slate-700">
@@ -127,7 +127,7 @@ export default function Dashboard() {
               ) : purchases.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                   <ShieldCheck size={48} className="mb-4 opacity-30" aria-hidden="true" />
-                  <p className="font-medium text-base">Vault is currently empty</p>
+                  <p className="font-medium text-base">You haven't made any purchases yet.</p>
                 </div>
               ) : (
                 purchases.map((p, i) => (
@@ -157,7 +157,7 @@ export default function Dashboard() {
                         className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-9 px-4 backdrop-blur-md border shadow-lg font-semibold transition-opacity ${revealedAssets[i] ? 'bg-black/60 border-slate-700 text-slate-300 hover:text-white opacity-0 focus:opacity-100 group-hover:opacity-100' : 'bg-slate-800 border-slate-600 text-white hover:bg-slate-700'}`}
                       >
                         {revealedAssets[i] ? <EyeOff size={16} className="mr-2" aria-hidden="true" /> : <Eye size={16} className="mr-2" aria-hidden="true" />}
-                        {revealedAssets[i] ? 'Mask Asset' : 'Reveal Asset'}
+                        {revealedAssets[i] ? 'Hide Details' : 'Show Details'}
                       </Button>
                     </div>
                   </article>
@@ -175,8 +175,8 @@ export default function Dashboard() {
                 <Activity size={20} className="text-purple-400" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Network Activity</h3>
-                <p className="text-sm text-slate-400">Live system updates</p>
+                <h3 className="text-lg font-bold text-white">Recent Updates</h3>
+                <p className="text-sm text-slate-400">Latest news and alerts</p>
               </div>
             </header>
 
@@ -184,7 +184,7 @@ export default function Dashboard() {
               {dataLoading ? (
                  <ActivitySkeletons />
               ) : latestNews.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">No recent transmissions.</p>
+                <p className="text-sm text-slate-400 text-center py-8">No recent updates.</p>
               ) : (
                 latestNews.map((news) => (
                   <article key={news.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">

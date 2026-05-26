@@ -39,13 +39,13 @@ export default function Auth() {
           await refreshUser();
           navigate('/dashboard');
         } else {
-          toast.success('Node initialized. Please authenticate.');
+          toast.success('Account created successfully. Please sign in.');
           setIsLogin(true);
           setPassword(''); // Clear password field for security
         }
       } else {
         const errorData = await res.json().catch(() => ({}));
-        toast.error(errorData.error || (isLogin ? 'Authentication failure' : 'Initialization failed'));
+        toast.error(errorData.error || (isLogin ? 'Sign in failed' : 'Registration failed'));
       }
     } catch (err) {
       toast.error('Network connection disrupted. Please retry.');
@@ -67,7 +67,7 @@ export default function Auth() {
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight">BIN<span className="text-blue-500">SHOP</span></h1>
             <p className="text-sm text-slate-400 mt-1 font-medium">
-              {isLogin ? 'Authenticate to access network.' : 'Initialize secure node identity.'}
+              {isLogin ? 'Sign in to your account.' : 'Create an account to join us.'}
             </p>
           </div>
         </header>
@@ -80,7 +80,7 @@ export default function Auth() {
               <Input 
                 id="auth-username"
                 type="text" 
-                placeholder="Network Alias" 
+                placeholder="Username" 
                 required 
                 disabled={isSubmitting}
                 value={username}
@@ -97,7 +97,7 @@ export default function Auth() {
               <Input 
                 id="auth-password"
                 type="password" 
-                placeholder="Passphrase" 
+                placeholder="Password" 
                 required 
                 disabled={isSubmitting}
                 value={password}
@@ -136,13 +136,13 @@ export default function Auth() {
                  Processing
                </span>
             ) : (
-              isLogin ? 'Authorize Access' : 'Create Node'
+              isLogin ? 'Sign In' : 'Create Account'
             )}
           </Button>
         </form>
 
         <footer className="mt-8 text-center text-sm text-slate-400 font-medium">
-          {isLogin ? "Require an identity? " : "Already initialized? "}
+          {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button 
             type="button" 
             onClick={() => {
@@ -152,9 +152,9 @@ export default function Auth() {
               setReferralCode('');
             }} 
             disabled={isSubmitting}
-            className="text-blue-400 hover:text-blue-300 font-bold transition-colors focus-visible:outline-none focus-visible:underline disabled:opacity-50"
+            className="text-blue-400 hover:text-blue-300 font-bold transition-colors focus-visible:outline-none focus-visible:underline disabled:opacity-70"
           >
-            {isLogin ? 'Register Here' : 'Authenticate'}
+            {isLogin ? 'Sign Up' : 'Sign In'}
           </button>
         </footer>
       </main>

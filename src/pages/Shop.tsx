@@ -65,11 +65,11 @@ export default function Shop() {
       const data = await res.json();
       
       if (res.ok) {
-        toast.success(`Procurement successful! -${data.pricePaid} PTS`);
+        toast.success(`Purchase successful! -${data.pricePaid} PTS`);
         await refreshUser();
         setRevealedAsset({ title: item.title, data: data.assetData });
       } else {
-        toast.error(data.error || 'Procurement failed');
+        toast.error(data.error || 'Purchase failed');
       }
     } catch (err) {
       toast.error('Network error. Transaction aborted.');
@@ -101,7 +101,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-8 lg:p-10 xl:p-12 pb-24 lg:pb-32 animate-in fade-in duration-700 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-8 lg:p-10 xl:p-12 pb-24 lg:pb-32 animate-in fade-in duration-300 w-full max-w-7xl mx-auto">
       
       <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-950/60 to-indigo-950/40 border border-blue-500/30 p-6 md:p-8 shadow-[0_15px_40px_-15px_rgba(37,99,235,0.2)]">
         <div className="relative z-10">
@@ -237,7 +237,7 @@ export default function Shop() {
                     ) : (
                       <>
                         <ShoppingCart size={16} className={item.isVipExclusive && !user?.isVip ? '' : 'mr-2'} aria-hidden="true" /> 
-                        {item.isVipExclusive && !user?.isVip ? 'Locked' : 'Procure'}
+                        {item.isVipExclusive && !user?.isVip ? 'Locked' : 'Purchase'}
                       </>
                     )}
                   </Button>
@@ -253,10 +253,10 @@ export default function Shop() {
         <DialogContent className="bg-[#0a0c10] border border-slate-800 text-white sm:max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)]">
           <DialogHeader>
             <DialogTitle className="text-emerald-400 flex items-center gap-2 text-xl font-black">
-              <CheckCircle2 size={24} aria-hidden="true" /> Acquisition Secured
+              <CheckCircle2 size={24} aria-hidden="true" /> Purchase Complete
             </DialogTitle>
             <DialogDescription className="text-slate-300 mt-2 text-sm">
-              Authorization complete. You have unlocked <span className="text-white font-bold">{revealedAsset?.title}</span>. Store this payload securely.
+              You have successfully purchased <span className="text-white font-bold">{revealedAsset?.title}</span>. Your asset is ready below.
             </DialogDescription>
           </DialogHeader>
           
@@ -270,7 +270,7 @@ export default function Shop() {
                 className="absolute top-2 right-2 h-9 w-9 bg-slate-900/90 border border-slate-700 text-slate-300 hover:text-white hover:bg-emerald-600 hover:border-emerald-500 transition-colors backdrop-blur-sm" 
                 onClick={() => {
                   navigator.clipboard.writeText(revealedAsset?.data || '');
-                  toast.success('Payload copied to memory clipboard.');
+                  toast.success('Copied to clipboard.');
                 }}
                 aria-label="Copy payload to clipboard"
               >
