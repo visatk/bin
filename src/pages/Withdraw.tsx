@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Withdraw() {
-  const { user, mutateUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [address, setAddress] = useState('');
   const [amountPts, setAmountPts] = useState('');
   const [history, setHistory] = useState<any[]>([]);
@@ -58,7 +58,7 @@ export default function Withdraw() {
         setAddress('');
         setAmountPts('');
         fetchHistory();
-        if (mutateUser) mutateUser(); // Refresh user balance
+        if (refreshUser) refreshUser(); // Refresh user balance
       } else {
         toast.error(data.error || 'Withdrawal failed');
       }
