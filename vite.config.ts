@@ -18,7 +18,6 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Assuming your local worker runs on 8787. Change if needed.
       '/api': {
         target: 'http://localhost:8787',
         changeOrigin: true,
@@ -29,9 +28,14 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['lucide-react', 'recharts', 'embla-carousel-react']
+        // FIX: Changed manualChunks from object to function to fix TS2769
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor';
+          }
+          if (id.includes('node_modules/lucide-react') || id.includes('node_modules/recharts') || id.includes('node_modules/embla-carousel-react')) {
+            return 'ui';
+          }
         }
       }
     }
