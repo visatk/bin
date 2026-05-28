@@ -29,9 +29,15 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['lucide-react', 'recharts', 'embla-carousel-react']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (['react', 'react-dom', 'react-router-dom'].some(pkg => id.includes(`node_modules/${pkg}/`))) {
+              return 'vendor';
+            }
+            if (['lucide-react', 'recharts', 'embla-carousel-react'].some(pkg => id.includes(`node_modules/${pkg}/`))) {
+              return 'ui';
+            }
+          }
         }
       }
     }
