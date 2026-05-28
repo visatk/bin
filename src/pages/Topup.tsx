@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CheckCircle2, XCircle, History, ShieldAlert, Coins, Timer } from 'lucide-react';
+import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CircleCheck, CircleX, History, ShieldAlert, Coins, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,7 +34,6 @@ export default function Topup() {
   const [step, setStep] = useState(1);
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutes
   const [timerActive, setTimerActive] = useState(false);
-
   const [targetEndTime, setTargetEndTime] = useState<number | null>(null);
 
   useEffect(() => {
@@ -81,7 +80,6 @@ export default function Topup() {
     };
     
     fetchHistory();
-    
     return () => controller.abort();
   }, []);
 
@@ -120,7 +118,6 @@ export default function Topup() {
         setTargetEndTime(null);
         setTimeLeft(900);
         
-        // Re-fetch history directly without AbortController since it's an immediate action
         const hRes = await fetch('/api/topup/history');
         if (hRes.ok) setHistory(await hRes.json());
       } else {
@@ -135,15 +132,14 @@ export default function Topup() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'paid': return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-2.5 py-1 font-bold"><CheckCircle2 size={14} className="mr-1.5" aria-hidden="true" /> Approved</Badge>;
-      case 'rejected': return <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/20 px-2.5 py-1 font-bold"><XCircle size={14} className="mr-1.5" aria-hidden="true" /> Rejected</Badge>;
+      case 'paid': return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-2.5 py-1 font-bold"><CircleCheck size={14} className="mr-1.5" aria-hidden="true" /> Approved</Badge>;
+      case 'rejected': return <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/20 px-2.5 py-1 font-bold"><CircleX size={14} className="mr-1.5" aria-hidden="true" /> Rejected</Badge>;
       default: return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-2.5 py-1 font-bold"><Clock size={14} className="mr-1.5" aria-hidden="true" /> Pending</Badge>;
     }
   };
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8 pb-24 animate-in fade-in duration-300 max-w-7xl mx-auto w-full">
-      
       <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-[#0a0c10] border border-slate-800/80 p-8 shadow-xl">
         <div className="relative z-10">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-4">
@@ -162,12 +158,9 @@ export default function Topup() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Provision Form */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
             
-            {/* Step Indicators */}
             <div className="flex items-center justify-between mb-8 relative z-10">
               {[1, 2, 3].map((s) => (
                 <div key={s} className="flex flex-col items-center gap-2">
@@ -176,7 +169,7 @@ export default function Topup() {
                     step > s ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 
                     'bg-[#0a0c10] border-slate-800 text-slate-500'
                   }`}>
-                    {step > s ? <CheckCircle2 size={16} /> : s}
+                    {step > s ? <CircleCheck size={16} /> : s}
                   </div>
                 </div>
               ))}
@@ -190,7 +183,6 @@ export default function Topup() {
               {step === 3 && <><History size={22} className="text-blue-500" /> Finalize Verification</>}
             </h2>
 
-            {/* Step 1: Configuration */}
             {step === 1 && (
               <div className="flex flex-col gap-6 animate-in slide-in-from-right-4 duration-300">
                 <div className="space-y-3">
@@ -246,7 +238,6 @@ export default function Topup() {
               </div>
             )}
 
-            {/* Step 2: Payment Details */}
             {step === 2 && (
               <div className="flex flex-col gap-5 animate-in slide-in-from-right-4 duration-300">
                 <div className="bg-[#0a0c10] border border-blue-500/20 rounded-2xl p-4 flex items-center justify-between">
@@ -266,7 +257,7 @@ export default function Topup() {
                 </div>
 
                 <div className="flex flex-col items-center p-6 bg-white rounded-2xl mx-auto shadow-inner">
-                  <QRCode value={WALLETS[currency]} size={160} className="rounded-lg" />
+                  {WALLETS[currency] && <QRCode value={WALLETS[currency]} size={160} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />}
                 </div>
 
                 <div className="space-y-2">
@@ -302,7 +293,6 @@ export default function Topup() {
               </div>
             )}
 
-            {/* Step 3: Finalize */}
             {step === 3 && (
               <form onSubmit={handleSubmit} className="flex flex-col gap-5 animate-in slide-in-from-right-4 duration-300">
                 <div className="bg-[#0a0c10] border border-slate-800 rounded-2xl p-4 mb-2">
@@ -345,7 +335,6 @@ export default function Topup() {
           </section>
         </div>
 
-        {/* Ledger History */}
         <div className="lg:col-span-7">
           <section aria-live="polite" className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 h-full shadow-lg flex flex-col min-h-[500px]">
             <header className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800/50">
