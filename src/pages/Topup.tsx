@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CircleCheck, CircleX, History, ShieldAlert, Coins, Timer } from 'lucide-react';
+import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, History, ShieldAlert, Coins, Timer, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import QRCode from 'react-qr-code';
 
 interface Invoice {
   id: number;
@@ -32,7 +31,7 @@ export default function Topup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [step, setStep] = useState(1);
-  const [timeLeft, setTimeLeft] = useState(900); // 15 minutes
+  const [timeLeft, setTimeLeft] = useState(900);
   const [timerActive, setTimerActive] = useState(false);
   const [targetEndTime, setTargetEndTime] = useState<number | null>(null);
 
@@ -132,8 +131,8 @@ export default function Topup() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'paid': return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-2.5 py-1 font-bold"><CircleCheck size={14} className="mr-1.5" aria-hidden="true" /> Approved</Badge>;
-      case 'rejected': return <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/20 px-2.5 py-1 font-bold"><CircleX size={14} className="mr-1.5" aria-hidden="true" /> Rejected</Badge>;
+      case 'paid': return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-2.5 py-1 font-bold"><CheckCircle size={14} className="mr-1.5" aria-hidden="true" /> Approved</Badge>;
+      case 'rejected': return <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/20 px-2.5 py-1 font-bold"><XCircle size={14} className="mr-1.5" aria-hidden="true" /> Rejected</Badge>;
       default: return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-2.5 py-1 font-bold"><Clock size={14} className="mr-1.5" aria-hidden="true" /> Pending</Badge>;
     }
   };
@@ -169,7 +168,7 @@ export default function Topup() {
                     step > s ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 
                     'bg-[#0a0c10] border-slate-800 text-slate-500'
                   }`}>
-                    {step > s ? <CircleCheck size={16} /> : s}
+                    {step > s ? <CheckCircle size={16} /> : s}
                   </div>
                 </div>
               ))}
@@ -256,8 +255,18 @@ export default function Topup() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center p-6 bg-white rounded-2xl mx-auto shadow-inner">
-                  {WALLETS[currency] && <QRCode value={WALLETS[currency]} size={160} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />}
+                {/* API Based Native QR Image - Prevents React 19 Crash */}
+                <div className="flex flex-col items-center p-4 bg-white rounded-2xl mx-auto shadow-inner min-h-[160px] min-w-[160px] justify-center relative">
+                  {WALLETS[currency] ? (
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(WALLETS[currency])}&bgcolor=ffffff&color=000000`} 
+                      alt="Wallet QR Code" 
+                      className="w-[150px] h-[150px] object-contain rounded-md"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <QrCode className="text-slate-300 animate-pulse" size={32} />
+                  )}
                 </div>
 
                 <div className="space-y-2">
