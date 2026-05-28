@@ -35,19 +35,26 @@ export default function Topup() {
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutes
   const [timerActive, setTimerActive] = useState(false);
 
+  const [targetEndTime, setTargetEndTime] = useState<number | null>(null);
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
-    if (timerActive && timeLeft > 0) {
+    if (timerActive && targetEndTime) {
       interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        const remaining = Math.max(0, Math.floor((targetEndTime - Date.now()) / 1000));
+        setTimeLeft(remaining);
+        
+        if (remaining === 0) {
+          setTimerActive(false);
+          setTargetEndTime(null);
+          toast.error('Payment window expired. Please initiate a new topup.');
+          setStep(1);
+          setCredits('');
+        }
       }, 1000);
-    } else if (timeLeft === 0 && timerActive) {
-      setTimerActive(false);
-      toast.error('Payment window expired. Please initiate a new topup.');
-      setStep(1);
     }
     return () => clearInterval(interval);
-  }, [timerActive, timeLeft]);
+  }, [timerActive, targetEndTime]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -55,39 +62,51 @@ export default function Topup() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const fetchHistory = async () => {
-    try {
-      const res = await fetch('/api/topup/history');
-      if (res.ok) {
+  useEffect(() => {
+    const controller = new AbortController();
+    
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch('/api/topup/history', { signal: controller.signal });
+        if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         setHistory(data);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          toast.error('Failed to sync history from edge');
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      toast.error('Failed to sync history from edge');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
+    };
+    
     fetchHistory();
+    
+    return () => controller.abort();
   }, []);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Address securely copied to clipboard');
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Address securely copied to clipboard');
+    } catch (err) {
+      toast.error('Clipboard access denied.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!txHash.trim() || !credits) return toast.error('Incomplete payload. Please fill all fields.');
     
+    const numCredits = Number(credits);
+    if (isNaN(numCredits) || numCredits <= 0) return toast.error('Invalid amount specified.');
+    
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/topup/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txHash, currency: currency.split(' ')[0], creditsToAdd: Number(credits) })
+        body: JSON.stringify({ txHash, currency: currency.split(' ')[0], creditsToAdd: numCredits })
       });
       
       const data = await res.json();
@@ -98,8 +117,12 @@ export default function Topup() {
         setCredits('');
         setStep(1);
         setTimerActive(false);
+        setTargetEndTime(null);
         setTimeLeft(900);
-        await fetchHistory();
+        
+        // Re-fetch history directly without AbortController since it's an immediate action
+        const hRes = await fetch('/api/topup/history');
+        if (hRes.ok) setHistory(await hRes.json());
       } else {
         toast.error(data.error || 'Transaction submission failed');
       }
@@ -209,9 +232,12 @@ export default function Topup() {
 
                 <Button 
                   onClick={() => {
-                    if (!credits || Number(credits) <= 0) return toast.error('Please enter a valid amount.');
+                    if (!credits || isNaN(Number(credits)) || Number(credits) <= 0) {
+                      return toast.error('Please enter a valid amount.');
+                    }
                     setStep(2);
                     setTimerActive(true);
+                    setTargetEndTime(Date.now() + 900 * 1000);
                   }}
                   className="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-black h-12 rounded-xl"
                 >

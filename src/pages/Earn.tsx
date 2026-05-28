@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Copy, Users, Gift, TrendingUp, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -10,23 +10,40 @@ export default function Earn() {
   const [referralCode, setReferralCode] = useState('...');
   const [loading, setLoading] = useState(true);
   
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://visatk.us';
-  const referralLink = `${origin}/auth?ref=${referralCode}`;
+  const referralLink = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://visatk.us';
+    return `${origin}/auth?ref=${referralCode}`;
+  }, [referralCode]);
   
   useEffect(() => {
-    fetch('/api/user/earn')
-      .then(r => r.json())
+    const controller = new AbortController();
+    
+    fetch('/api/user/earn', { signal: controller.signal })
+      .then(r => {
+        if (!r.ok) throw new Error('Network response was not ok');
+        return r.json();
+      })
       .then(d => {
         if (d.referralCode) setReferralCode(d.referralCode);
         setStats({ referred: d.totalReferrals || 0, earned: d.pointsEarned || 0 });
       })
-      .catch(() => toast.error("Failed to sync reward metrics"))
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          toast.error("Failed to sync reward metrics");
+        }
+      })
       .finally(() => setLoading(false));
+      
+    return () => controller.abort();
   }, []);
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(referralLink);
-    toast.success('Affiliate link recorded to memory buffer.');
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      toast.success('Affiliate link recorded to memory buffer.');
+    } catch (err) {
+      toast.error('Clipboard access denied.');
+    }
   };
 
   return (
