@@ -48,7 +48,6 @@ export default function Earn() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8 animate-in slide-in-from-left-4 duration-500 max-w-3xl mx-auto w-full">
-      
       <header className="text-center mt-6 md:mt-10 mb-4">
         <div className="inline-flex p-4 bg-purple-500/10 border border-purple-500/20 rounded-3xl mb-5 shadow-[0_0_40px_rgba(168,85,247,0.15)]">
           <Gift size={36} className="text-purple-400" aria-hidden="true" />
@@ -59,7 +58,6 @@ export default function Earn() {
         </p>
       </header>
 
-      {/* The Link Configuration */}
       <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
         <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-bl-full blur-[50px] pointer-events-none" aria-hidden="true" />
         
@@ -84,9 +82,9 @@ export default function Earn() {
           </div>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center bg-white p-4 rounded-2xl shadow-inner shrink-0">
-          <div className={`transition-opacity duration-300 ${loading ? 'opacity-20 blur-sm' : 'opacity-100'}`}>
-             <QRCode value={referralLink} size={130} />
+        <div className="relative z-10 flex flex-col items-center bg-white p-4 rounded-2xl shadow-inner shrink-0 w-[162px] h-[162px]">
+          <div className={`w-full h-full transition-opacity duration-300 ${loading ? 'opacity-20 blur-sm' : 'opacity-100'}`}>
+             {referralLink && <QRCode value={referralLink} size={130} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />}
           </div>
           {loading && (
              <div className="absolute inset-0 flex items-center justify-center">
@@ -96,7 +94,6 @@ export default function Earn() {
         </div>
       </section>
 
-      {/* Analytics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-2">
         <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-8 flex flex-col items-center text-center shadow-lg hover:border-blue-500/30 transition-colors">
           <div className="p-3 bg-blue-500/10 rounded-2xl mb-4">
