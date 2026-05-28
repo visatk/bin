@@ -1,20 +1,65 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Check, X, PlusCircle, Megaphone, Trash2, LayoutDashboard, Radio, Package, Edit2, Landmark } from 'lucide-react';
+import { Check, X, PlusCircle, Megaphone, Trash2, LayoutDashboard, Radio, Package, Edit2, Landmark, LifeBuoy, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 
-type TabState = 'assets' | 'topups' | 'broadcasts' | 'withdrawals';
+type TabState = 'assets' | 'topups' | 'broadcasts' | 'withdrawals' | 'support';
+
+interface Bin {
+  id: number;
+  title: string;
+  category: string;
+  priceCredits: number;
+  badge?: string;
+  assetData: string;
+  isVipExclusive: boolean;
+  soldCount?: number;
+}
+
+interface Topup {
+  id: number;
+  username: string;
+  txHash: string;
+  creditsToAdd: number;
+  currency: string;
+}
+
+interface Withdrawal {
+  id: number;
+  username: string;
+  address: string;
+  amountUsdt: number;
+  amountPts: number;
+}
+
+interface Announcement {
+  id: number;
+  title: string;
+  type: string;
+}
+
+interface SupportTicket {
+  id: number;
+  userId: number;
+  username: string;
+  subject: string;
+  message: string;
+  status: 'open' | 'resolved';
+  reply?: string;
+  createdAt: string;
+}
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState<TabState>('assets');
   
-  const [bins, setBins] = useState<any[]>([]);
-  const [topups, setTopups] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [bins, setBins] = useState<Bin[]>([]);
+  const [topups, setTopups] = useState<Topup[]>([]);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Bin Form State
@@ -30,19 +75,24 @@ export default function Admin() {
   const [newsTitle, setNewsTitle] = useState('');
   const [newsType, setNewsType] = useState('update');
 
+  // Support Reply State
+  const [ticketReplies, setTicketReplies] = useState<{ [key: number]: string }>({});
+
   const fetchAdminData = async () => {
     setIsLoading(true);
     try {
-      const [binsRes, topupsRes, newsRes, withdrawRes] = await Promise.all([
+      const [binsRes, topupsRes, newsRes, withdrawRes, supportRes] = await Promise.all([
         fetch('/api/admin/bins'),
         fetch('/api/admin/topups'),
         fetch('/api/admin/announcements'),
-        fetch('/api/admin/withdrawals')
+        fetch('/api/admin/withdrawals'),
+        fetch('/api/admin/support-tickets')
       ]);
       if (binsRes.ok) setBins(await binsRes.json());
       if (topupsRes.ok) setTopups(await topupsRes.json());
       if (newsRes.ok) setAnnouncements(await newsRes.json());
       if (withdrawRes.ok) setWithdrawals(await withdrawRes.json());
+      if (supportRes.ok) setSupportTickets(await supportRes.json());
     } catch (e) {
       console.error('Edge state synchronization failed:', e);
       toast.error('Network synchronization failed');
@@ -56,7 +106,7 @@ export default function Admin() {
   }, []);
 
   // --- ASSET OPERATIONS ---
-  const handleEditInit = (bin: any) => {
+  const handleEditInit = (bin: Bin) => {
     setEditingBinId(bin.id);
     setTitle(bin.title);
     setCategory(bin.category);
@@ -162,6 +212,26 @@ export default function Admin() {
     }
   };
 
+  // --- SUPPORT OPERATIONS ---
+  const handleResolveTicket = async (id: number) => {
+    const reply = ticketReplies[id];
+    if (!reply || !reply.trim()) return toast.error('Reply message cannot be empty');
+    
+    const res = await fetch(`/api/admin/support-tickets/${id}/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reply }),
+    });
+
+    if (res.ok) {
+      toast.success('Ticket resolved and reply sent');
+      setSupportTickets(supportTickets.filter(t => t.id !== id));
+      setTicketReplies(prev => { const n = {...prev}; delete n[id]; return n; });
+    } else {
+      toast.error('Failed to resolve ticket');
+    }
+  };
+
   const getBadgeColor = (type: string) => {
     switch(type) {
       case 'alert': return 'bg-red-500/20 text-red-400 border-red-500/30';
@@ -171,20 +241,25 @@ export default function Admin() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-500 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-500 max-w-7xl mx-auto w-full relative">
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -z-10" aria-hidden="true" />
+      
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-800/80">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl shadow-inner">
-            <LayoutDashboard className="text-blue-500" size={28} aria-hidden="true" />
+          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl shadow-inner relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-transparent opacity-50" />
+            <LayoutDashboard className="text-blue-500 relative z-10" size={28} aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-white">Command Center</h1>
-            <p className="text-sm text-slate-400 font-medium">Platform Logistics & Network Moderation</p>
+            <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-2">
+              Command Center
+            </h1>
+            <p className="text-sm text-slate-400 font-medium mt-1">Platform Logistics & Network Moderation</p>
           </div>
         </div>
 
         <nav role="tablist" aria-label="Admin Sections" className="flex gap-2 bg-[#11141d] p-1.5 rounded-xl border border-slate-800 w-full md:w-auto overflow-x-auto custom-scrollbar">
-          {(['assets', 'topups', 'withdrawals', 'broadcasts'] as TabState[]).map((tab) => (
+          {(['assets', 'topups', 'withdrawals', 'broadcasts', 'support'] as TabState[]).map((tab) => (
             <button 
               key={tab}
               role="tab"
@@ -210,6 +285,12 @@ export default function Admin() {
                 </div>
               )}
               {tab === 'broadcasts' && <Megaphone size={16} aria-hidden="true" />}
+              {tab === 'support' && (
+                <div className="relative flex items-center">
+                  <LifeBuoy size={16} aria-hidden="true" />
+                  {supportTickets.length > 0 && <span className="absolute -top-1 -right-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse" aria-hidden="true" />}
+                </div>
+              )}
               {tab}
             </button>
           ))}
@@ -532,6 +613,68 @@ export default function Admin() {
               </div>
             </section>
           </div>
+        )}
+
+        {/* --- SUPPORT TAB --- */}
+        {activeTab === 'support' && (
+          <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl max-w-5xl mx-auto w-full min-h-[600px] flex flex-col">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-800/50">
+              <div className="flex items-center gap-3 text-white font-bold text-xl">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <LifeBuoy size={24} className="text-blue-500" aria-hidden="true" />
+                </div>
+                <h2>User Support Inbox</h2>
+              </div>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 px-4 py-1.5 text-sm font-black tracking-widest">
+                {supportTickets.length} OPEN
+              </Badge>
+            </header>
+
+            <div className="flex flex-col gap-5 overflow-y-auto pr-2 custom-scrollbar flex-1">
+              {isLoading ? (
+                 <div className="flex justify-center py-20 text-blue-500"><div className="w-8 h-8 border-4 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"/></div>
+              ) : supportTickets.length === 0 ? (
+                <div className="text-center py-24 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl bg-[#0a0c10]/50 h-full">
+                  <Check size={48} className="text-slate-700 mb-4" aria-hidden="true" />
+                  <p className="text-slate-400 font-medium text-lg">Inbox Zero.</p>
+                  <p className="text-slate-500 text-sm mt-1">No open support tickets to review.</p>
+                </div>
+              ) : (
+                supportTickets.map((ticket) => (
+                  <article key={ticket.id} className="bg-[#171a23] border border-slate-800 rounded-2xl p-6 flex flex-col gap-4 hover:border-slate-600 transition-colors">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-lg font-bold text-white">{ticket.subject}</h3>
+                        <span className="text-xs text-slate-500">{new Date(ticket.createdAt).toLocaleString()}</span>
+                      </div>
+                      <p className="text-sm text-slate-400 font-medium">
+                        User: <span className="text-blue-400">@{ticket.username}</span>
+                      </p>
+                    </div>
+                    
+                    <div className="bg-[#0a0c10] border border-slate-800 rounded-xl p-4 shadow-inner">
+                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{ticket.message}</p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                      <Input
+                        value={ticketReplies[ticket.id] || ''}
+                        onChange={(e) => setTicketReplies(prev => ({ ...prev, [ticket.id]: e.target.value }))}
+                        placeholder="Type reply to resolve..."
+                        className="flex-1 bg-[#0a0c10] border-slate-700 h-12 rounded-xl focus-visible:ring-blue-500 text-white"
+                      />
+                      <Button 
+                        onClick={() => handleResolveTicket(ticket.id)} 
+                        className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_5px_15px_rgba(37,99,235,0.2)] h-12 px-6 font-bold text-base active:scale-95 transition-transform shrink-0"
+                      >
+                        <Send size={18} className="mr-2" aria-hidden="true" /> Resolve & Reply
+                      </Button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
         )}
 
       </main>

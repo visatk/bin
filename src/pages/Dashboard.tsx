@@ -6,12 +6,25 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
 
+interface News {
+  id: number;
+  title: string;
+  type: string;
+  createdAt: string;
+}
+
+interface Purchase {
+  title: string;
+  category: string;
+  assetData: string;
+}
+
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
-  const [latestNews, setLatestNews] = useState<any[]>([]);
-  const [purchases, setPurchases] = useState<any[]>([]);
+  const [latestNews, setLatestNews] = useState<News[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [revealedAssets, setRevealedAssets] = useState<Record<number, boolean>>({});
 

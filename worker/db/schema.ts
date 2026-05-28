@@ -61,3 +61,13 @@ export const withdrawals = sqliteTable('withdrawals', {
   status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+
+export const supportTickets = sqliteTable('support_tickets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+  status: text('status').notNull().default('open'), // 'open', 'resolved'
+  reply: text('reply'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});

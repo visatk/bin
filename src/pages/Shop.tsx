@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search, ShoppingCart, Crown, Clock, Flame, ShieldCheck, Copy, CheckCircle2, PackageX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,12 +51,12 @@ export default function Shop() {
     fetchMarketData();
   }, []);
 
-  const categories = ['All', ...Array.from(new Set(items.map(i => i.category)))];
+  const categories = useMemo(() => ['All', ...Array.from(new Set(items.map(i => i.category)))], [items]);
   
-  const filteredItems = items.filter(item => 
+  const filteredItems = useMemo(() => items.filter(item => 
     (filter === 'All' || item.category === filter) &&
     item.title.toLowerCase().includes(search.toLowerCase())
-  );
+  ), [items, filter, search]);
 
   const handlePurchase = async (item: Item) => {
     setPurchasingIds(prev => ({ ...prev, [item.id]: true }));

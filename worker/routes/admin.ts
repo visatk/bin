@@ -171,4 +171,40 @@ app.post('/withdrawals/:id/resolve', zValidator('json', z.object({ action: z.enu
   return c.json({ success: true });
 });
 
+// --- SUPPORT MANAGEMENT ---
+app.get('/support-tickets', async (c) => {
+  const db = c.get('db');
+  const tickets = await db.select({
+    id: schema.supportTickets.id,
+    userId: schema.supportTickets.userId,
+    username: schema.users.username,
+    subject: schema.supportTickets.subject,
+    message: schema.supportTickets.message,
+    status: schema.supportTickets.status,
+    reply: schema.supportTickets.reply,
+    createdAt: schema.supportTickets.createdAt,
+  })
+  .from(schema.supportTickets)
+  .leftJoin(schema.users, eq(schema.supportTickets.userId, schema.users.id))
+  .where(eq(schema.supportTickets.status, 'open'))
+  .orderBy(desc(schema.supportTickets.createdAt));
+  
+  return c.json(tickets);
+});
+
+app.post('/support-tickets/:id/resolve', zValidator('json', z.object({ reply: z.string().min(1) })), async (c) => {
+  const id = Number(c.req.param('id'));
+  const { reply } = c.req.valid('json');
+  const db = c.get('db');
+
+  const ticket = await db.select().from(schema.supportTickets).where(eq(schema.supportTickets.id, id)).get();
+  if (!ticket || ticket.status !== 'open') return c.json({ error: 'Ticket not found or already resolved' }, 404);
+
+  await db.update(schema.supportTickets)
+    .set({ status: 'resolved', reply })
+    .where(eq(schema.supportTickets.id, id));
+
+  return c.json({ success: true });
+});
+
 export default app;

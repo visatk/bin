@@ -13,6 +13,7 @@ const VIP = lazy(() => import('./pages/VIP'));
 const Topup = lazy(() => import('./pages/Topup'));
 const Earn = lazy(() => import('./pages/Earn'));
 const Withdraw = lazy(() => import('./pages/Withdraw'));
+const Support = lazy(() => import('./pages/Support'));
 
 // UI/UX Optimization: On-brand skeleton/spinner during lazy load fetching
 const PageLoader = () => (
@@ -47,6 +48,7 @@ export default function App() {
               <Route path="/earn" element={<Earn />} />
               <Route path="/topup" element={<Topup />} />
               <Route path="/withdraw" element={<Withdraw />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/admin" element={<Admin />} />
             </Route>

@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Copy, Users, Gift, TrendingUp } from 'lucide-react';
+import { Copy, Users, Gift, TrendingUp, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import QRCode from 'react-qr-code';
 
 export default function Earn() {
   const [stats, setStats] = useState({ referred: 0, earned: 0 });
   const [referralCode, setReferralCode] = useState('...');
   const [loading, setLoading] = useState(true);
   
-  const referralLink = `https://visatk.us/auth?ref=${referralCode}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://visatk.us';
+  const referralLink = `${origin}/auth?ref=${referralCode}`;
   
   useEffect(() => {
     fetch('/api/user/earn')
@@ -41,10 +43,10 @@ export default function Earn() {
       </header>
 
       {/* The Link Configuration */}
-      <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+      <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
         <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-bl-full blur-[50px] pointer-events-none" aria-hidden="true" />
         
-        <div className="relative z-10">
+        <div className="relative z-10 flex-1 w-full">
           <Label htmlFor="referral-link" className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 block">Unique Access Key (URL)</Label>
           <div className="flex items-center gap-3 bg-[#0a0c10] p-2 pl-5 rounded-2xl border border-slate-700 shadow-inner focus-within:border-purple-500/50 transition-colors">
             <span id="referral-link" className={`flex-1 text-sm md:text-base font-mono truncate transition-opacity ${loading ? 'opacity-50 blur-[2px]' : 'text-purple-300'}`}>
@@ -54,11 +56,26 @@ export default function Earn() {
               onClick={copyLink} 
               disabled={loading}
               aria-label="Copy referral link"
-              className="bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl h-12 px-6 shadow-[0_5px_15px_rgba(147,51,234,0.2)] active:scale-95 transition-transform"
+              className="bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl h-12 px-6 shadow-[0_5px_15px_rgba(147,51,234,0.2)] active:scale-95 transition-transform shrink-0"
             >
               <Copy size={18} className="md:mr-2" aria-hidden="true" /> <span className="hidden md:inline">Copy</span>
             </Button>
           </div>
+          <div className="mt-4 flex items-start gap-3 text-purple-400/90 bg-purple-500/10 p-4 rounded-xl text-xs font-bold border border-purple-500/20">
+            <Gift size={16} className="shrink-0 mt-0.5" />
+            <p>Share this link or QR code. You'll receive 10% of your invitee's first topup automatically.</p>
+          </div>
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center bg-white p-4 rounded-2xl shadow-inner shrink-0">
+          <div className={`transition-opacity duration-300 ${loading ? 'opacity-20 blur-sm' : 'opacity-100'}`}>
+             <QRCode value={referralLink} size={130} />
+          </div>
+          {loading && (
+             <div className="absolute inset-0 flex items-center justify-center">
+                <QrCode className="text-slate-300 animate-pulse" size={32} />
+             </div>
+          )}
         </div>
       </section>
 

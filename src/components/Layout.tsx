@@ -14,6 +14,7 @@ export default function Layout() {
     { path: '/vip', icon: Crown, label: 'VIP', prefetch: () => import('@/pages/VIP') },
     { path: '/earn', icon: Coins, label: 'Earn', prefetch: () => import('@/pages/Earn') },
     { path: '/withdraw', icon: Landmark, label: 'Withdraw', prefetch: () => import('@/pages/Withdraw') },
+    { path: '/support', icon: ShieldPlus, label: 'Support', prefetch: () => import('@/pages/Support') },
   ];
 
   if (user?.isAdmin) {
