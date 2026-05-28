@@ -3,7 +3,6 @@ import { Copy, Users, Gift, TrendingUp, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import QRCode from 'react-qr-code';
 
 export default function Earn() {
   const [stats, setStats] = useState({ referred: 0, earned: 0 });
@@ -12,6 +11,8 @@ export default function Earn() {
   
   const referralLink = useMemo(() => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://visatk.us';
+    // Prevents making an API call with "..." while loading
+    if (referralCode === '...') return '';
     return `${origin}/auth?ref=${referralCode}`;
   }, [referralCode]);
   
@@ -65,11 +66,11 @@ export default function Earn() {
           <Label htmlFor="referral-link" className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 block">Unique Access Key (URL)</Label>
           <div className="flex items-center gap-3 bg-[#0a0c10] p-2 pl-5 rounded-2xl border border-slate-700 shadow-inner focus-within:border-purple-500/50 transition-colors">
             <span id="referral-link" className={`flex-1 text-sm md:text-base font-mono truncate transition-opacity ${loading ? 'opacity-50 blur-[2px]' : 'text-purple-300'}`}>
-              {referralLink}
+              {referralLink || 'Initializing...'}
             </span>
             <Button 
               onClick={copyLink} 
-              disabled={loading}
+              disabled={loading || !referralLink}
               aria-label="Copy referral link"
               className="bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl h-12 px-6 shadow-[0_5px_15px_rgba(147,51,234,0.2)] active:scale-95 transition-transform shrink-0"
             >
@@ -82,11 +83,16 @@ export default function Earn() {
           </div>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center bg-white p-4 rounded-2xl shadow-inner shrink-0 w-[162px] h-[162px]">
-          <div className={`w-full h-full transition-opacity duration-300 ${loading ? 'opacity-20 blur-sm' : 'opacity-100'}`}>
-             {referralLink && <QRCode value={referralLink} size={130} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />}
-          </div>
-          {loading && (
+        {/* API Based Native QR Image */}
+        <div className="relative z-10 flex flex-col items-center justify-center bg-white p-3 rounded-2xl shadow-inner shrink-0 w-[150px] h-[150px]">
+          {!loading && referralLink ? (
+             <img 
+               src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(referralLink)}&bgcolor=ffffff&color=000000`}
+               alt="Referral Link QR Code"
+               className="w-[125px] h-[125px] object-contain rounded-md"
+               loading="lazy"
+             />
+          ) : (
              <div className="absolute inset-0 flex items-center justify-center">
                 <QrCode className="text-slate-300 animate-pulse" size={32} />
              </div>
