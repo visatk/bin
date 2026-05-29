@@ -55,7 +55,7 @@ export default function Earn() {
         </div>
         <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">Affiliate Program</h1>
         <p className="text-slate-400 text-sm md:text-base mt-3 max-w-md mx-auto font-medium leading-relaxed">
-          Earn up to $3000 for every successful referral <strong className="text-purple-400 font-black">10%</strong> of their provision value in Points.
+          Earn up to $3000 for every successful referral. <strong className="text-purple-400 font-black">10%</strong> of their provision value in Points.
         </p>
       </header>
 
