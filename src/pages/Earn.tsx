@@ -53,9 +53,9 @@ export default function Earn() {
         <div className="inline-flex p-4 bg-purple-500/10 border border-purple-500/20 rounded-3xl mb-5 shadow-[0_0_40px_rgba(168,85,247,0.15)]">
           <Gift size={36} className="text-purple-400" aria-hidden="true" />
         </div>
-        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">Expand the Network</h1>
+        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">Affiliate Program</h1>
         <p className="text-slate-400 text-sm md:text-base mt-3 max-w-md mx-auto font-medium leading-relaxed">
-          Recruit users to the platform. Upon their initial deposit protocol, you instantly acquire <strong className="text-purple-400 font-black">10%</strong> of their provision value in Points.
+          Earn up to $3000 for every successful referral <strong className="text-purple-400 font-black">10%</strong> of their provision value in Points.
         </p>
       </header>
 
