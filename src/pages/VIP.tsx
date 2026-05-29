@@ -35,7 +35,7 @@ export default function VIP() {
       <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-950/60 to-yellow-950/40 border border-amber-500/30 p-6 md:p-8 shadow-[0_15px_40px_-15px_rgba(245,158,11,0.2)]">
         <div className="relative z-10">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            Elite VIP Access <Crown className="text-amber-400 drop-shadow-lg" size={32} aria-hidden="true" />
+            VIP Access <Crown className="text-amber-400 drop-shadow-lg" size={32} aria-hidden="true" />
           </h1>
           <p className="text-amber-100/70 mt-2 max-w-lg text-sm md:text-base font-medium">
             Elevate your account clearance. Unlock exclusive VIP assets, premium market discounts, and direct admin support.
@@ -98,7 +98,7 @@ export default function VIP() {
                 <CheckCircle2 size={20} /> Clearance Active
               </span>
             ) : (
-              'Activate VIP Clearance'
+              'Activate VIP'
             )}
           </Button>
         </section>
