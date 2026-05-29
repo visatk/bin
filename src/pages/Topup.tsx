@@ -16,9 +16,9 @@ interface Invoice {
 }
 
 const WALLETS: Record<string, string> = {
-  'LTC': 'LS4tMyzN5pzovB3iJtmo1cWoo8gHdNcjxy',
-  'ETH': '0x32717e9d5e81ca1cb22335c412421e6f83b69d83',
-  'USDT (TRX)': 'TGxhyDRrU8EfzozZqM7sK6bztSK348Ue9Y'
+  'LTC': 'LT5WuacHbu7do9ytJ8hzubnZ9qYZCVd7jG',
+  'ETH': '0x64D01A6aBd5a58e12b498d0AeFAA21E1536Bb157',
+  'USDT (TRX)': 'TLSs2DcHJaNmBDFJ58vNmW45nCbHjyyKMm'
 };
 
 export default function Topup() {
