@@ -51,20 +51,16 @@ export default function Topup() {
     setPriceError(false);
     
     try {
-      const [ltcRes, ethRes] = await Promise.all([
-        fetch('https://api.coincap.io/v2/assets/litecoin'),
-        fetch('https://api.coincap.io/v2/assets/ethereum')
-      ]);
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=litecoin,ethereum&vs_currencies=usd');
       
-      if (!ltcRes.ok || !ethRes.ok) throw new Error('Failed to fetch live rates');
+      if (!res.ok) throw new Error('Failed to fetch live rates');
       
-      const ltcData = await ltcRes.json();
-      const ethData = await ethRes.json();
+      const data = await res.json();
       
       setPrices(prev => ({
         ...prev,
-        'LTC': parseFloat(ltcData.data.priceUsd),
-        'ETH': parseFloat(ethData.data.priceUsd)
+        'LTC': data.litecoin.usd,
+        'ETH': data.ethereum.usd
       }));
     } catch (error) {
       console.error("Crypto Price Sync Failed:", error);
