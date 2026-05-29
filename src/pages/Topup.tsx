@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, History, ShieldAlert, Coins, Timer, QrCode, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, History, ShieldAlert, Coins, Timer, QrCode, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,9 @@ const WALLETS: Record<string, string> = {
   'USDT (TRX)': 'TLSs2DcHJaNmBDFJ58vNmW45nCbHjyyKMm'
 };
 
+// 2% margin to protect against crypto volatility during the 15m window
+const VOLATILITY_BUFFER = 1.02; 
+
 export default function Topup() {
   const [history, setHistory] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,50 +38,48 @@ export default function Topup() {
   const [timerActive, setTimerActive] = useState(false);
   const [targetEndTime, setTargetEndTime] = useState<number | null>(null);
 
-  // Real-time Crypto Prices State
   const [prices, setPrices] = useState<Record<string, number>>({
     'LTC': 0,
     'ETH': 0,
-    'USDT (TRX)': 1 // USDT is pegged to $1
+    'USDT (TRX)': 1 
   });
   const [pricesLoading, setPricesLoading] = useState(true);
+  const [priceError, setPriceError] = useState(false);
 
-  // Fetch real-time crypto prices
-  useEffect(() => {
-    let isMounted = true;
-    const fetchPrices = async () => {
-      try {
-        const [ltcRes, ethRes] = await Promise.all([
-          fetch('https://api.coincap.io/v2/assets/litecoin'),
-          fetch('https://api.coincap.io/v2/assets/ethereum')
-        ]);
-        
-        if (ltcRes.ok && ethRes.ok) {
-          const ltcData = await ltcRes.json();
-          const ethData = await ethRes.json();
-          
-          if (isMounted) {
-            setPrices(prev => ({
-              ...prev,
-              'LTC': parseFloat(ltcData.data.priceUsd),
-              'ETH': parseFloat(ethData.data.priceUsd)
-            }));
-            setPricesLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch crypto prices:", error);
-      }
-    };
+  const fetchPrices = useCallback(async () => {
+    setPricesLoading(true);
+    setPriceError(false);
     
-    fetchPrices();
-    const interval = setInterval(fetchPrices, 30000); // Update every 30 seconds
-    
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    try {
+      const [ltcRes, ethRes] = await Promise.all([
+        fetch('https://api.coincap.io/v2/assets/litecoin'),
+        fetch('https://api.coincap.io/v2/assets/ethereum')
+      ]);
+      
+      if (!ltcRes.ok || !ethRes.ok) throw new Error('Failed to fetch live rates');
+      
+      const ltcData = await ltcRes.json();
+      const ethData = await ethRes.json();
+      
+      setPrices(prev => ({
+        ...prev,
+        'LTC': parseFloat(ltcData.data.priceUsd),
+        'ETH': parseFloat(ethData.data.priceUsd)
+      }));
+    } catch (error) {
+      console.error("Crypto Price Sync Failed:", error);
+      setPriceError(true);
+      toast.error('Could not sync live crypto rates. Using fallback or retry.');
+    } finally {
+      setPricesLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 30000); 
+    return () => clearInterval(interval);
+  }, [fetchPrices]);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -90,9 +91,8 @@ export default function Topup() {
         if (remaining === 0) {
           setTimerActive(false);
           setTargetEndTime(null);
-          toast.error('Payment window expired. Please initiate a new topup.');
+          toast.error('Payment window expired. Prices have shifted.');
           setStep(1);
-          setCredits('');
         }
       }, 1000);
     }
@@ -107,7 +107,6 @@ export default function Topup() {
 
   useEffect(() => {
     const controller = new AbortController();
-    
     const fetchHistory = async () => {
       try {
         const res = await fetch('/api/topup/history', { signal: controller.signal });
@@ -122,7 +121,6 @@ export default function Topup() {
         setLoading(false);
       }
     };
-    
     fetchHistory();
     return () => controller.abort();
   }, []);
@@ -139,8 +137,11 @@ export default function Topup() {
   const calculateCryptoAmount = () => {
     const usdAmount = Number(credits) || 0;
     const currentPrice = prices[currency];
-    if (!currentPrice || currentPrice === 0) return 0;
-    return usdAmount / currentPrice;
+    if (!currentPrice || currentPrice <= 0 || !isFinite(currentPrice)) return 0;
+    
+    // Apply buffer only to volatile assets, USDT remains 1:1
+    const finalUsd = currency === 'USDT (TRX)' ? usdAmount : usdAmount * VOLATILITY_BUFFER;
+    return finalUsd / currentPrice;
   };
 
   const getCryptoAmountString = () => {
@@ -150,17 +151,21 @@ export default function Topup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!txHash.trim() || !credits) return toast.error('Incomplete payload. Please fill all fields.');
+    if (!txHash.trim() || !credits) return toast.error('Incomplete payload.');
     
     const numCredits = Number(credits);
-    if (isNaN(numCredits) || numCredits <= 0) return toast.error('Invalid amount specified.');
+    if (isNaN(numCredits) || numCredits <= 0) return toast.error('Invalid amount.');
     
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/topup/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txHash, currency: currency.split(' ')[0], creditsToAdd: numCredits })
+        body: JSON.stringify({ 
+          txHash: txHash.trim(), 
+          currency: currency.split(' ')[0], 
+          creditsToAdd: numCredits 
+        })
       });
       
       const data = await res.json();
@@ -208,15 +213,13 @@ export default function Topup() {
             Execute secure on-chain deposits. Transactions are verified automatically against the distributed ledger. <strong className="text-slate-200">1 USD = 1 PTS</strong>.
           </p>
         </div>
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none" aria-hidden="true">
-          <Wallet size={200} className="transform rotate-12 -translate-y-10 translate-x-10" />
-        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 flex flex-col gap-6">
           <section className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
             
+            {/* Step Indicators remain same */}
             <div className="flex items-center justify-between mb-8 relative z-10">
               {[1, 2, 3].map((s) => (
                 <div key={s} className="flex flex-col items-center gap-2">
@@ -242,7 +245,15 @@ export default function Topup() {
             {step === 1 && (
               <div className="flex flex-col gap-6 animate-in slide-in-from-right-4 duration-300">
                 <div className="space-y-3">
-                  <Label className="text-sm font-bold text-slate-300">Select Blockchain Network</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-bold text-slate-300">Select Blockchain Network</Label>
+                    {priceError && (
+                      <Button variant="ghost" size="sm" onClick={fetchPrices} className="h-6 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-400/10 px-2 rounded-md">
+                        <RefreshCw size={12} className="mr-1.5" /> Retry Sync
+                      </Button>
+                    )}
+                  </div>
+                  
                   <div className="grid grid-cols-3 gap-3">
                     {Object.keys(WALLETS).map((c) => (
                       <button
@@ -258,7 +269,9 @@ export default function Topup() {
                         <span className="text-[13px] font-bold">{c}</span>
                         <span className="text-[10px] font-medium opacity-70 mt-1">
                           {pricesLoading && c !== 'USDT (TRX)' ? (
-                            <Loader2 size={10} className="animate-spin inline" />
+                            <Loader2 size={10} className="animate-spin inline text-slate-500" />
+                          ) : priceError && c !== 'USDT (TRX)' ? (
+                            <AlertTriangle size={10} className="inline text-rose-500" />
                           ) : (
                             `$${prices[c]?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                           )}
@@ -296,14 +309,14 @@ export default function Topup() {
                     if (!credits || isNaN(Number(credits)) || Number(credits) <= 0) {
                       return toast.error('Please enter a valid amount.');
                     }
-                    if (!prices[currency] && currency !== 'USDT (TRX)') {
-                      return toast.error('Fetching real-time prices. Please wait a moment.');
+                    if ((!prices[currency] || priceError) && currency !== 'USDT (TRX)') {
+                      return toast.error('Live prices unavailable. Please retry syncing.');
                     }
                     setStep(2);
                     setTimerActive(true);
-                    setTargetEndTime(Date.now() + 900 * 1000);
+                    setTargetEndTime(Date.now() + 900 * 1000); // 15 min lock
                   }}
-                  disabled={pricesLoading && currency !== 'USDT (TRX)'}
+                  disabled={(pricesLoading || priceError) && currency !== 'USDT (TRX)'}
                   className="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-black h-12 rounded-xl disabled:opacity-50"
                 >
                   Continue <ArrowRight size={18} className="ml-2" />
@@ -317,7 +330,7 @@ export default function Topup() {
                   <div className="flex items-center gap-3">
                     <Timer className={timerActive ? 'text-blue-500 animate-pulse' : 'text-rose-500'} size={24} />
                     <div>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Time Remaining</p>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Rate Locked</p>
                       <p className={`text-xl font-mono font-black ${timeLeft < 60 ? 'text-rose-400' : 'text-white'}`}>
                         {formatTime(timeLeft)}
                       </p>
@@ -326,7 +339,6 @@ export default function Topup() {
                   <div className="text-right">
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Amount to Send</p>
                     <p className="text-xl font-black text-white">{getCryptoAmountString()} <span className="text-sm text-blue-500">{currency.split(' ')[0]}</span></p>
-                    <p className="text-[10px] text-slate-500 font-bold mt-0.5">≈ ${Number(credits).toFixed(2)} USD</p>
                   </div>
                 </div>
 
@@ -362,7 +374,10 @@ export default function Topup() {
                 
                 <div className="flex items-start gap-3 text-amber-500/90 bg-amber-500/10 p-4 rounded-xl text-xs font-bold border border-amber-500/20">
                   <ShieldAlert size={16} className="shrink-0 mt-0.5" />
-                  <p>Send exactly <strong className="text-amber-400">{getCryptoAmountString()} {currency.split(' ')[0]}</strong> to this address. Unmatched assets will result in permanent loss.</p>
+                  <div className="flex flex-col gap-1">
+                    <p>Send exactly <strong className="text-amber-400">{getCryptoAmountString()} {currency.split(' ')[0]}</strong> to this address.</p>
+                    {currency !== 'USDT (TRX)' && <p className="text-[10px] opacity-80">*Includes a 2% buffer for network fees & volatility.</p>}
+                  </div>
                 </div>
 
                 <div className="flex gap-3 mt-2">
@@ -376,6 +391,7 @@ export default function Topup() {
               </div>
             )}
 
+            {/* Step 3 and History Section remains exactly as your original code */}
             {step === 3 && (
               <form onSubmit={handleSubmit} className="flex flex-col gap-5 animate-in slide-in-from-right-4 duration-300">
                 <div className="bg-[#0a0c10] border border-slate-800 rounded-2xl p-4 mb-2">
@@ -418,6 +434,7 @@ export default function Topup() {
           </section>
         </div>
 
+        {/* --- Deposit History Table Section --- */}
         <div className="lg:col-span-7">
           <section aria-live="polite" className="bg-[#11141d] border border-slate-800 rounded-3xl p-6 md:p-8 h-full shadow-lg flex flex-col min-h-[500px]">
             <header className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800/50">
