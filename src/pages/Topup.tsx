@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, History, ShieldAlert, Coins, Timer, QrCode } from 'lucide-react';
+import { Wallet, Copy, ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, History, ShieldAlert, Coins, Timer, QrCode, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,51 @@ export default function Topup() {
   const [timeLeft, setTimeLeft] = useState(900);
   const [timerActive, setTimerActive] = useState(false);
   const [targetEndTime, setTargetEndTime] = useState<number | null>(null);
+
+  // Real-time Crypto Prices State
+  const [prices, setPrices] = useState<Record<string, number>>({
+    'LTC': 0,
+    'ETH': 0,
+    'USDT (TRX)': 1 // USDT is pegged to $1
+  });
+  const [pricesLoading, setPricesLoading] = useState(true);
+
+  // Fetch real-time crypto prices
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPrices = async () => {
+      try {
+        const [ltcRes, ethRes] = await Promise.all([
+          fetch('https://api.coincap.io/v2/assets/litecoin'),
+          fetch('https://api.coincap.io/v2/assets/ethereum')
+        ]);
+        
+        if (ltcRes.ok && ethRes.ok) {
+          const ltcData = await ltcRes.json();
+          const ethData = await ethRes.json();
+          
+          if (isMounted) {
+            setPrices(prev => ({
+              ...prev,
+              'LTC': parseFloat(ltcData.data.priceUsd),
+              'ETH': parseFloat(ethData.data.priceUsd)
+            }));
+            setPricesLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch crypto prices:", error);
+      }
+    };
+    
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 30000); // Update every 30 seconds
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -89,6 +134,18 @@ export default function Topup() {
     } catch (err) {
       toast.error('Clipboard access denied.');
     }
+  };
+
+  const calculateCryptoAmount = () => {
+    const usdAmount = Number(credits) || 0;
+    const currentPrice = prices[currency];
+    if (!currentPrice || currentPrice === 0) return 0;
+    return usdAmount / currentPrice;
+  };
+
+  const getCryptoAmountString = () => {
+    const amount = calculateCryptoAmount();
+    return currency === 'USDT (TRX)' ? amount.toFixed(2) : amount.toFixed(6);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,21 +249,28 @@ export default function Topup() {
                         key={c}
                         type="button"
                         onClick={() => setCurrency(c as keyof typeof WALLETS)}
-                        className={`py-3 px-1 rounded-xl text-[13px] font-bold transition-all border outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                        className={`flex flex-col items-center justify-center py-3 px-1 rounded-xl transition-all border outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           currency === c 
                             ? 'bg-blue-600/10 border-blue-500 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)]' 
                             : 'bg-[#0a0c10] border-slate-800 text-slate-400 hover:bg-slate-900 hover:border-slate-700 hover:text-slate-200'
                         }`}
                       >
-                        {c}
+                        <span className="text-[13px] font-bold">{c}</span>
+                        <span className="text-[10px] font-medium opacity-70 mt-1">
+                          {pricesLoading && c !== 'USDT (TRX)' ? (
+                            <Loader2 size={10} className="animate-spin inline" />
+                          ) : (
+                            `$${prices[c]?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          )}
+                        </span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-1">
                   <Label htmlFor="tx-amount" className="text-sm font-bold text-slate-300">Procurement Value (PTS Expected)</Label>
-                  <div className="relative">
+                  <div className="relative mt-2">
                     <Coins className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <Input 
                       id="tx-amount"
@@ -219,6 +283,12 @@ export default function Topup() {
                     />
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-500">PTS</div>
                   </div>
+                  <div className="flex justify-between items-center px-1 mt-2 text-xs font-bold text-slate-400">
+                    <span>Current Rate Estimate:</span>
+                    <span className="text-blue-400 flex items-center gap-1">
+                      {Number(credits) > 0 ? getCryptoAmountString() : '0.00'} {currency.split(' ')[0]}
+                    </span>
+                  </div>
                 </div>
 
                 <Button 
@@ -226,11 +296,15 @@ export default function Topup() {
                     if (!credits || isNaN(Number(credits)) || Number(credits) <= 0) {
                       return toast.error('Please enter a valid amount.');
                     }
+                    if (!prices[currency] && currency !== 'USDT (TRX)') {
+                      return toast.error('Fetching real-time prices. Please wait a moment.');
+                    }
                     setStep(2);
                     setTimerActive(true);
                     setTargetEndTime(Date.now() + 900 * 1000);
                   }}
-                  className="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-black h-12 rounded-xl"
+                  disabled={pricesLoading && currency !== 'USDT (TRX)'}
+                  className="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-black h-12 rounded-xl disabled:opacity-50"
                 >
                   Continue <ArrowRight size={18} className="ml-2" />
                 </Button>
@@ -251,11 +325,11 @@ export default function Topup() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Amount to Send</p>
-                    <p className="text-xl font-black text-white">{credits} <span className="text-sm text-blue-500">{currency.split(' ')[0]}</span></p>
+                    <p className="text-xl font-black text-white">{getCryptoAmountString()} <span className="text-sm text-blue-500">{currency.split(' ')[0]}</span></p>
+                    <p className="text-[10px] text-slate-500 font-bold mt-0.5">≈ ${Number(credits).toFixed(2)} USD</p>
                   </div>
                 </div>
 
-                {/* API Based Native QR Image - Prevents React 19 Crash */}
                 <div className="flex flex-col items-center p-4 bg-white rounded-2xl mx-auto shadow-inner min-h-[160px] min-w-[160px] justify-center relative">
                   {WALLETS[currency] ? (
                     <img 
@@ -288,7 +362,7 @@ export default function Topup() {
                 
                 <div className="flex items-start gap-3 text-amber-500/90 bg-amber-500/10 p-4 rounded-xl text-xs font-bold border border-amber-500/20">
                   <ShieldAlert size={16} className="shrink-0 mt-0.5" />
-                  <p>Send exactly {credits} {currency.split(' ')[0]} to this address. Unmatched assets will result in permanent loss.</p>
+                  <p>Send exactly <strong className="text-amber-400">{getCryptoAmountString()} {currency.split(' ')[0]}</strong> to this address. Unmatched assets will result in permanent loss.</p>
                 </div>
 
                 <div className="flex gap-3 mt-2">
