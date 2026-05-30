@@ -36,8 +36,8 @@ export default function Withdraw() {
 
   const submitWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (Number(amountPts) < 100) {
-      toast.error("Minimum withdrawal is 100 PTS");
+    if (Number(amountPts) < 10) {
+      toast.error("Minimum withdrawal is 10 PTS");
       return;
     }
     if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
@@ -121,11 +121,11 @@ export default function Withdraw() {
                   <input
                     id="amount"
                     type="number"
-                    min="100"
+                    min="10"
                     step="1"
                     value={amountPts}
                     onChange={(e) => setAmountPts(e.target.value)}
-                    placeholder="Min. 100"
+                    placeholder="Min. 10"
                     className="w-full bg-[#0a0c10] border border-slate-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
                     required
                   />
