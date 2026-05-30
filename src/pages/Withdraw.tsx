@@ -89,7 +89,7 @@ export default function Withdraw() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-white">Create Request</h2>
-                  <p className="text-sm text-slate-400">100 PTS = 1 USDT</p>
+                  <p className="text-sm text-slate-400">1 PTS = 1 USDT</p>
                 </div>
               </div>
               <div className="text-right">
