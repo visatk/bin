@@ -1,64 +1,73 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
-  id: text('id').primaryKey(),
+  id: integer('id').primaryKey({ autoIncrement: true }),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
-  credits: integer('credits').default(0).notNull(),
-  isVip: integer('is_vip', { mode: 'boolean' }).default(false).notNull(),
-  isAdmin: integer('is_admin', { mode: 'boolean' }).default(false).notNull(),
-  createdAt: text('created_at').notNull(),
+  credits: integer('credits').notNull().default(0),
+  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  isVip: integer('is_vip', { mode: 'boolean' }).notNull().default(false),
+  vipUntil: integer('vip_until', { mode: 'timestamp' }),
+  referralCode: text('referral_code').notNull().unique(),
+  referredBy: integer('referred_by'),
+  referralEarnings: integer('referral_earnings').notNull().default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-export const assets = sqliteTable('assets', {
+export const items = sqliteTable('items', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
   category: text('category').notNull(),
-  badge: text('badge'),
+  date: text('date').notNull(),
+  soldCount: integer('sold_count').notNull().default(0),
   priceCredits: integer('price_credits').notNull(),
-  isVipExclusive: integer('is_vip_exclusive', { mode: 'boolean' }).default(false).notNull(),
-  assetData: text('asset_data').notNull(), // The actual secret data (CC, Bin, Proxy)
-  soldCount: integer('sold_count').default(0).notNull(),
-  createdAt: text('created_at').notNull(),
+  badge: text('badge'),
+  isVipExclusive: integer('is_vip_exclusive', { mode: 'boolean' }).notNull().default(false),
+  assetData: text('asset_data').notNull().default(''), 
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
 export const purchases = sqliteTable('purchases', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id),
-  assetId: integer('asset_id').references(() => assets.id),
-  title: text('title').notNull(),
-  category: text('category').notNull(),
-  assetData: text('asset_data').notNull(),
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id),
+  itemId: integer('item_id').notNull().references(() => items.id),
   pricePaid: integer('price_paid').notNull(),
-  createdAt: text('created_at').notNull(),
+  purchasedAt: integer('purchased_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-export const transactions = sqliteTable('transactions', {
+export const cryptoInvoices = sqliteTable('crypto_invoices', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: text('user_id').notNull().references(() => users.id),
-  type: text('type').notNull(), // 'deposit' or 'withdraw'
-  points: integer('points').notNull(),
-  amountUsd: real('amount_usd').notNull(),
-  method: text('method').notNull(),
-  trxId: text('trx_id').notNull().unique(),
-  status: text('status').notNull(), // 'pending', 'approved', 'rejected'
-  createdAt: text('created_at').notNull(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  txHash: text('tx_hash').notNull(),
+  currency: text('currency').notNull(), 
+  creditsToAdd: integer('credits_to_add').notNull(),
+  status: text('status').notNull().default('pending'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-export const news = sqliteTable('news', {
+export const announcements = sqliteTable('announcements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
-  type: text('type').notNull(), // 'alert', 'event', 'update'
-  createdAt: text('created_at').notNull(),
+  type: text('type').notNull().default('update'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-// Withdrawal requests table
 export const withdrawals = sqliteTable('withdrawals', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: text('user_id').notNull().references(() => users.id),
-  amountPoints: integer('amount_points').notNull(),
-  walletAddress: text('wallet_address').notNull(),
-  method: text('method').notNull(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  amountPts: integer('amount_pts').notNull(),
+  amountUsdt: integer('amount_usdt').notNull(),
+  address: text('address').notNull(),
   status: text('status').notNull().default('pending'),
-  createdAt: text('created_at').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const supportTickets = sqliteTable('support_tickets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+  status: text('status').notNull().default('open'),
+  reply: text('reply'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
