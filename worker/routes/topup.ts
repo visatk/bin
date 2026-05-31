@@ -16,8 +16,8 @@ topupRouter.post('/request', requireAuth, async (c) => {
     const { points, amountUsd, method, trxHash } = body;
 
     // 1. Validation Logic
-    if (!points || points < 100) {
-      return c.json({ error: "Minimum topup limit is 100 PTS." }, 400);
+    if (!points || points < 10) {
+      return c.json({ error: "Minimum topup limit is 10 USDT." }, 400);
     }
     
     if (!trxHash || trxHash.length < 5) {
