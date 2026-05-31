@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, Wallet, Crown, ShieldPlus, Coins, LogOut, Hexagon, Landmark } from 'lucide-react';
+import { Home, ShoppingCart, Wallet, ShieldPlus, LogOut, Hexagon, Crown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 
@@ -8,15 +8,10 @@ export default function Layout() {
   const location = useLocation();
 
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Home', prefetch: () => import('@/pages/Dashboard') },
     { path: '/', icon: ShoppingCart, label: 'Shop', prefetch: () => import('@/pages/Shop') },
+    { path: '/dashboard', icon: Home, label: 'Workspace', prefetch: () => import('@/pages/Dashboard') },
     { path: '/topup', icon: Wallet, label: 'Topup', prefetch: () => import('@/pages/Topup') },
-    { path: '/vip', icon: Crown, label: 'VIP', prefetch: () => import('@/pages/VIP') },
-    { path: '/earn', icon: Coins, label: 'Earn', prefetch: () => import('@/pages/Earn') },
-    { path: '/withdraw', icon: Landmark, label: 'Withdraw', prefetch: () => import('@/pages/Withdraw') },
-    { path: '/support', icon: ShieldPlus, label: 'Support', prefetch: () => import('@/pages/Support') },
   ];
-
   if (user?.isAdmin) {
     navItems.push({ path: '/admin', icon: ShieldPlus, label: 'Admin Dashboard', prefetch: () => import('@/pages/Admin') });
   }
