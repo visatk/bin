@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Wallet, Bell, ShieldCheck, Activity, Eye, EyeOff, 
+  Wallet, ShieldCheck, Activity, Eye, EyeOff, 
   LockKeyhole, ArrowRight, LayoutDashboard, Crown, 
   Coins, Landmark, ShieldPlus, Sparkles, TrendingUp,
   Clock
