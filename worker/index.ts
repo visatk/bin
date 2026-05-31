@@ -1,60 +1,60 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { setGlobalDb } from './db';
-import type { Env, Variables } from './types';
+import { secureHeaders } from 'hono/secure-headers';
+import { cache } from 'hono/cache';
+import type { Bindings, Variables } from './types';
+import { requireAuth } from './middleware/auth'; 
+import auth from './routes/auth';
+import shop from './routes/shop';
+import user from './routes/user';
+import vip from './routes/vip';
+import topup from './routes/topup';
+import admin from './routes/admin';
+import withdraw from './routes/withdraw';
+import support from './routes/support';
 
-// Import Routers
-import authRouter from './routes/auth';
-import shopRouter from './routes/shop';
-import topupRouter from './routes/topup';
-import userRouter from './routes/user';
-import adminRouter from './routes/admin';
-import vipRouter from './routes/vip';
-import withdrawRouter from './routes/withdraw';
-import supportRouter from './routes/support';
+const app = new Hono<{ Bindings: Bindings, Variables: Variables }>();
 
-const app = new Hono<{ Bindings: Env; Variables: Variables }>();
-
-// Security & CORS Middleware
-app.use('*', cors({
-  origin: '*', // For production, replace '*' with your actual domain
-  allowHeaders: ['Content-Type', 'Authorization'],
-  allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE'],
+app.use('/api/*', secureHeaders());
+app.use('/api/*', cors({ 
+  origin: ['http://localhost:5173', 'https://visatk.us'], 
+  allowHeaders: ['Content-Type', 'Authorization'], 
+  allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE'], 
+  credentials: true 
 }));
 
-// DB Initialization Middleware (Crucial for D1)
-app.use('*', async (c, next) => {
-  // Bind the Cloudflare D1 environment to our global db instance
-  if (c.env.DB) {
-    setGlobalDb(c.env.DB);
-  } else {
-    console.error("D1 Database binding not found!");
-  }
-  await next();
-});
+app.get(
+  '/api/shop/*',
+  cache({
+    cacheName: 'binmarket-shop-cache',
+    cacheControl: 'max-age=60, stale-while-revalidate=30',
+  })
+);
 
-// Health Check
-app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
+app.use('/api/shop/*', requireAuth);
+app.use('/api/user/*', requireAuth);
+app.use('/api/vip/*', requireAuth);
+app.use('/api/topup/*', requireAuth);
+app.use('/api/admin/*', requireAuth);
+app.use('/api/withdraw/*', requireAuth);
+app.use('/api/support/*', requireAuth);
 
-// Mount Sub-routers
-app.route('/api/auth', authRouter);
-app.route('/api/shop', shopRouter);
-app.route('/api/topup', topupRouter);
-app.route('/api/user', userRouter);
-app.route('/api/admin', adminRouter);
-app.route('/api/vip', vipRouter);
-app.route('/api/withdraw', withdrawRouter);
-app.route('/api/support', supportRouter);
-
-// Global Error Handler
 app.onError((err, c) => {
-  console.error(`[Global Error Handler]: ${err.message}`, err);
-  return c.json({ error: "Internal Server Error", message: err.message }, 500);
+  console.error('API Error:', err);
+  return c.json({ error: 'Internal Server Error' }, 500);
 });
 
-// 404 Handler
 app.notFound((c) => {
-  return c.json({ error: "API Route Not Found" }, 404);
+  return c.json({ error: 'Endpoint Not Found' }, 404);
 });
+
+app.route('/api/auth', auth);
+app.route('/api/shop', shop);
+app.route('/api/user', user);
+app.route('/api/vip', vip);
+app.route('/api/topup', topup);
+app.route('/api/admin', admin);
+app.route('/api/withdraw', withdraw);
+app.route('/api/support', support);
 
 export default app;
