@@ -9,7 +9,7 @@ const topupRouter = new Hono();
 // POST /api/topup/request
 topupRouter.post('/request', requireAuth, async (c) => {
   try {
-    const user = c.get('user');
+    const user = c.get('user'); // Authenticated User Data
     
     // Parse Incoming Payload
     const body = await c.req.json();
@@ -39,11 +39,15 @@ topupRouter.post('/request', requireAuth, async (c) => {
       return c.json({ error: "This Transaction Hash has already been submitted." }, 409);
     }
 
-    // 3. Database Insertion (Pending State)
+    // 3. SECURE VIP 5% BONUS CALCULATION
+    // Even if a hacker modifies the frontend, the backend enforces the strict 5% rule.
+    const actualPointsToCredit = user.isVip ? Math.floor(points * 1.05) : points;
+
+    // 4. Database Insertion (Pending State)
     await db.insert(transactions).values({
       userId: user.id,
       type: 'deposit',
-      points: points,
+      points: actualPointsToCredit,
       amountUsd: amountUsd,
       method: method,
       trxId: trxHash,
@@ -51,7 +55,7 @@ topupRouter.post('/request', requireAuth, async (c) => {
       createdAt: new Date().toISOString()
     });
 
-    // 4. Return Success
+    // 5. Return Success
     return c.json({ 
       success: true, 
       message: "Deposit request logged. Awaiting manual verification." 
@@ -70,7 +74,7 @@ topupRouter.get('/history', requireAuth, async (c) => {
   const history = await db.select()
     .from(transactions)
     .where(eq(transactions.userId, user.id))
-    // Assuming you sort by date descending in your real app
+    // limit etc..
     .limit(10);
     
   return c.json(history);
