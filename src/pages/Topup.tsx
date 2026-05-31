@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   Wallet, ShieldCheck, CheckCircle2, Copy, 
   ArrowRight, History, Sparkles, QrCode, 
-  CircleDollarSign, Hexagon, Activity 
+  CircleDollarSign, Hexagon, Activity, Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,10 +11,11 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// Removed hardcoded bonuses to enforce strictly 5% VIP bonus
 const PACKAGES = [
   { id: 'starter', points: 500, priceUsd: 5, popular: false },
-  { id: 'pro', points: 1500, priceUsd: 12, popular: true, bonus: '+20% Extra' },
-  { id: 'elite', points: 5000, priceUsd: 35, popular: false, bonus: 'Best Value' },
+  { id: 'pro', points: 1500, priceUsd: 15, popular: true },
+  { id: 'elite', points: 5000, priceUsd: 50, popular: false },
 ];
 
 const METHODS = [
@@ -35,7 +36,12 @@ export default function Topup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activePoints = customAmount ? parseInt(customAmount) || 0 : selectedPkg || 0;
-  // Dynamic Calculation: Assuming 100 PTS = 1 USD for custom amounts, or use package price
+  
+  // VIP 5% Bonus Calculation
+  const vipBonusPoints = user?.isVip ? Math.floor(activePoints * 0.05) : 0;
+  const totalReceivablePoints = activePoints + vipBonusPoints;
+
+  // Assuming 100 PTS = 1 USD for custom amounts, or use package price
   const activeUsdPrice = customAmount 
     ? (activePoints / 100).toFixed(2) 
     : PACKAGES.find(p => p.points === selectedPkg)?.priceUsd || 0;
@@ -64,7 +70,7 @@ export default function Topup() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          points: activePoints,
+          points: activePoints, // We send base points, backend safely calculates the 5% bonus
           amountUsd: Number(activeUsdPrice),
           method: selectedMethod,
           trxHash: trxId.trim()
@@ -116,6 +122,19 @@ export default function Topup() {
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-500/30">1</div>
                 <h2 className="text-xl font-bold text-white">Select Amount</h2>
               </div>
+
+              {/* VIP Global Bonus Banner */}
+              {user?.isVip && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/5 border border-amber-500/30 rounded-2xl flex items-center gap-3 shadow-inner">
+                  <div className="p-2 bg-amber-500/20 rounded-xl">
+                    <Crown size={20} className="text-amber-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-amber-400 font-bold text-sm">VIP Privilege Active</h4>
+                    <p className="text-amber-500/80 text-xs font-medium mt-0.5">You will receive an automatic +5% bonus on all deposits.</p>
+                  </div>
+                </div>
+              )}
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 {PACKAGES.map((pkg) => (
@@ -130,13 +149,12 @@ export default function Topup() {
                     }`}
                   >
                     {pkg.popular && (
-                      <Badge className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-black border-none text-[10px] font-black uppercase shadow-lg">
+                      <Badge className="absolute -top-3 right-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-none text-[10px] font-black uppercase shadow-lg">
                         <Sparkles size={10} className="mr-1" /> Popular
                       </Badge>
                     )}
                     <span className="text-2xl font-black text-white mb-1">{pkg.points} <span className="text-sm text-slate-400 font-medium">PTS</span></span>
                     <span className="text-sm font-bold text-emerald-400">${pkg.priceUsd} USD</span>
-                    {pkg.bonus && <span className="mt-3 text-[11px] font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md w-fit">{pkg.bonus}</span>}
                   </button>
                 ))}
               </div>
@@ -205,7 +223,7 @@ export default function Topup() {
                   </Badge>
                 </div>
 
-                <div className="group relative">
+                <div className="group relative mb-6">
                   <span className="text-xs text-slate-500 font-bold uppercase tracking-widest block mb-2">Deposit Address / ID</span>
                   <div className="flex items-center justify-between bg-[#11141d] border border-slate-700 rounded-xl p-4 transition-colors group-hover:border-slate-500">
                     <span className={`text-sm sm:text-base font-mono font-bold break-all pr-4 ${activeMethodData?.color}`}>
@@ -220,6 +238,26 @@ export default function Topup() {
                     </Button>
                   </div>
                 </div>
+
+                {/* Receiver Details */}
+                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col gap-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Base Points:</span>
+                    <span className="font-bold text-white">{activePoints} PTS</span>
+                  </div>
+                  {user?.isVip && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-amber-500 flex items-center gap-1.5"><Crown size={14}/> VIP Bonus (5%):</span>
+                      <span className="font-bold text-amber-500">+{vipBonusPoints} PTS</span>
+                    </div>
+                  )}
+                  <div className="w-full h-px bg-slate-800 my-1"></div>
+                  <div className="flex justify-between text-base">
+                    <span className="text-slate-300 font-bold">Total to Receive:</span>
+                    <span className="font-black text-emerald-400">{totalReceivablePoints} PTS</span>
+                  </div>
+                </div>
+
               </div>
 
               <div className="space-y-3 mb-8">
